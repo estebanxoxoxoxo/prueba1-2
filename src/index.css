@@ -297,14 +297,10 @@ p {
   position: relative;
   width: 100%;
   max-width: 440px;
-  background:
-    radial-gradient(120% 80% at 80% 0%, rgba(139, 92, 246, 0.1), transparent 55%),
-    radial-gradient(120% 90% at 15% 100%, rgba(18, 168, 160, 0.1), transparent 55%),
-    #fff;
-  border-radius: 30px;
-  padding: 30px 30px 28px;
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 10px 10px 0;
 }
 
 /* Escenario del búho: glow + mascota + sombra en el suelo */
