@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { BRAND } from './config';
-import Owl from './components/Owl';
+import Mascot from './components/Mascot';
 import WhatsAppButton, { WhatsAppFloat } from './components/WhatsAppButton';
 import {
   PlayIcon,
@@ -36,7 +36,7 @@ function Navbar() {
     <header className="nav">
       <div className="container nav-inner">
         <a className="brand" href="#top">
-          <Owl className="owl-badge" />
+          <Mascot className="owl-badge" />
           Smarty
         </a>
         <nav className="nav-links">
@@ -88,17 +88,22 @@ function Hero() {
           <span className="float-ico fi-4"><HeartIcon /></span>
 
           <div className="hero-card">
-            <span className="shield-glow" aria-hidden="true" />
-            <Owl className="hero-owl" />
+            <div className="owl-stage">
+              <span className="owl-glow" aria-hidden="true" />
+              <Mascot className="hero-owl" />
+              <span className="owl-shadow" aria-hidden="true" />
+            </div>
             <h3>Una única app donde tu hijo puede</h3>
             <div className="chip-row">
               <span className="chip green"><PlayIcon /> imágenes</span>
               <span className="chip purple"><ImageIcon /> contenido</span>
               <span className="chip blue"><PlayIcon /> videos</span>
             </div>
-            <p className="moderated">
-              <span>›</span> 100% moderado <span>‹</span>
-            </p>
+            <div className="moderated-badge">
+              <span className="dash" aria-hidden="true">〉〉</span>
+              100% moderado
+              <span className="dash" aria-hidden="true">〈〈</span>
+            </div>
           </div>
         </div>
       </div>
@@ -264,7 +269,7 @@ function FinalCTA() {
     <section className="section final-cta">
       <div className="container">
         <div className="cta-card reveal">
-          <Owl className="owl-badge" />
+          <Mascot className="owl-badge" />
           <h2>Dale a tu hijo un internet sin basura</h2>
           <p>
             Escríbenos por WhatsApp y te contamos cómo empezar con Smarty hoy
@@ -287,7 +292,7 @@ function Footer() {
       <div className="container">
         <div className="footer-top">
           <a className="brand" href="#top">
-            <Owl className="owl-badge" />
+            <Mascot className="owl-badge" />
             Smarty
           </a>
           <nav className="footer-links">
