@@ -10,6 +10,8 @@ import {
   ShieldIcon,
   CheckIcon,
 } from './components/icons';
+import { sendMetaEvent } from './metaEventSender';
+import { MetaEvent } from './metaEventsTypes';
 
 /* Anima elementos .reveal cuando entran en viewport. */
 function useReveal() {
@@ -311,6 +313,17 @@ function Footer() {
 
 export default function App() {
   useReveal();
+
+  useEffect(()=>{
+    const eventId = crypto.randomUUID();
+
+    fbq("track", "PageView", {}, { eventID: eventId });
+    fbq("track", "ViewContent", {}, { eventID: eventId });
+
+    sendMetaEvent(MetaEvent.PageView, eventId)
+    sendMetaEvent(MetaEvent.ViewContent, eventId)  
+  },[])
+
   return (
     <>
       <Navbar />
