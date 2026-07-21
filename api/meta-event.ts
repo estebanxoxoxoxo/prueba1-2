@@ -58,6 +58,13 @@ export default async function handler(req: any, res: any) {
     eventTime: Date.now(),
     ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress,
     userAgent: req.headers["user-agent"],
+    // Geolocalización por IP (headers que agrega Vercel en producción).
+    country: req.headers["x-vercel-ip-country"] || null,        // ISO 2 letras: AR, CL, CO…
+    region: req.headers["x-vercel-ip-country-region"] || null,
+    city: req.headers["x-vercel-ip-city"]
+      ? decodeURIComponent(String(req.headers["x-vercel-ip-city"]))
+      : null,
+    timezone: req.headers["x-vercel-ip-timezone"] || null,
     userId: req.user?.id,          // si tienes login
     email: req.user?.email,        // si la conoces
     fbp: req.cookies?._fbp,
