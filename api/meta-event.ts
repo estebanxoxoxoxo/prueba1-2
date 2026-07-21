@@ -1,6 +1,21 @@
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getFirestore, FieldValue } from "firebase-admin/firestore";
+
 export const config = {
   runtime: "nodejs",
 };
+
+// Inicializa Firebase Admin una sola vez y reusa la instancia.
+function getDb() {
+  if (!getApps().length) {
+    const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT no está configurada");
+    initializeApp({ credential: cert(JSON.parse(raw)) });
+    // Ignora campos undefined (ej. userId/email/fbp si no existen).
+    getFirestore().settings({ ignoreUndefinedProperties: true });
+  }
+  return getFirestore();
+}
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
@@ -62,6 +77,21 @@ export default async function handler(req: any, res: any) {
     );
 
     const data = await response.json();
+
+    // También manda el evento a la colección "logs" de Firestore.
+    // Best-effort: si falla el log, no rompe la respuesta al cliente.
+    try {
+      await getDb()
+        .collection("logs")
+        .add({
+          ...log,
+          metaOk: response.ok,
+          meta: data,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+    } catch (logErr: any) {
+      console.error("No se pudo guardar el log en Firestore:", logErr?.message);
+    }
 
     if (!response.ok) {
       return res.status(500).json(data);
