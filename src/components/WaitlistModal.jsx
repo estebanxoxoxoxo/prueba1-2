@@ -62,13 +62,14 @@ export default function WaitlistModal() {
       if (!res.ok) throw new Error('request_failed');
       setStatus('success');
 
-      // Conversión: Lead (pixel + Conversions API, con dedupe por eventID)
+      // Conversión: CompleteRegistration por navegador (pixel) y servidor (CAPI).
+      // Mismo eventID en ambos → Meta deduplica.
       try {
         const eventId = crypto.randomUUID();
         if (typeof window.fbq === 'function') {
-          window.fbq('track', 'Lead', {}, { eventID: eventId });
+          window.fbq('track', 'CompleteRegistration', {}, { eventID: eventId });
         }
-        sendMetaEvent(MetaEvent.Lead, eventId).catch(() => {});
+        sendMetaEvent(MetaEvent.CompleteRegistration, eventId).catch(() => {});
         if (typeof window.hj === 'function') window.hj('event', 'waitlist_submit');
       } catch { /* noop */ }
     } catch {
