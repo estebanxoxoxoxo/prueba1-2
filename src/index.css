@@ -565,9 +565,9 @@ h1, h2, h3, h4 {
 .vidrow-stats { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 0px; line-height: 1.2;}
 
 /* En mobile el hero se apila en este orden:
-   eyebrow → título → subtexto → teléfono → botones → confianza.
+   eyebrow → título → teléfono → subtexto → botones → confianza.
    'display: contents' saca a .hero-copy del flujo para poder intercalar
-   el teléfono entre el subtexto y los botones. Desktop queda igual. */
+   el teléfono entre el título y el subtexto. Desktop queda igual. */
 @media (max-width: 940px) {
   .hero-grid {
     display: flex;
@@ -579,9 +579,9 @@ h1, h2, h3, h4 {
   .hero-copy { display: contents; }
   .hero .eyebrow { order: 1; }
   .hero h1 { order: 2; width: 100%; margin: 18px 0 16px; }
-  .hero-sub { order: 3; width: 100%; max-width: 520px; margin: 0 auto; }
-  .hero-visual { order: 4; margin: 28px 0 30px; }
-  .hero-actions { order: 5; justify-content: center; }
+  .hero-visual { order: 3; margin: 10px 0 26px; }
+  .hero-sub { order: 4; width: 100%; max-width: 520px; margin: 0 auto; }
+  .hero-actions { order: 5; justify-content: center; margin-top: 22px; }
   .hero-trust { order: 6; justify-content: center; margin-top: 26px; max-width: 480px; }
 }
 
