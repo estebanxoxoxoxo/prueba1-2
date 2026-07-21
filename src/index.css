@@ -102,7 +102,7 @@ h1, h2, h3, h4 {
 @media (max-width: 720px) { .section { padding: 68px 0; } }
 
 .eyebrow {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 800;
@@ -115,8 +115,10 @@ h1, h2, h3, h4 {
   padding: 7px 15px;
   border-radius: var(--r-pill);
   box-shadow: var(--sh-xs);
+  width: 100%;
+  max-width: 420px;
 }
-.eyebrow svg { width: 15px; height: 15px; color: var(--violet); }
+.eyebrow svg { width: 25px; height: 25px; color: var(--violet); }
 
 .section-head {
   max-width: 720px;
@@ -945,10 +947,11 @@ h1, h2, h3, h4 {
 }
 .cta-card .btn-wa { font-size: 18px; padding: 17px 34px; }
 .cta-note {
-  margin-top: 18px;
+  margin-top: 20px;
   font-size: 13.5px;
   color: rgba(255, 255, 255, 0.82);
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 7px;
 }

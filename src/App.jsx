@@ -76,7 +76,7 @@ function Hero() {
       <div className="container hero-grid">
         <div className="hero-copy">
           <span className="eyebrow">
-            <ShieldIcon /> Internet seguro · Niños de 6 a 13 años
+            <ShieldIcon /> <div style={{ display: 'flex', width: '100%', textAlign: 'center', flexDirection: 'column', justifyContent: 'center', gap: '0px' }}><div>Internet seguro</div> <div>Niños de 6 a 13 años</div>  </div>
           </span>
           <h1>
             Todo lo bueno de internet para que aprenda.{' '}
@@ -449,9 +449,9 @@ function FinalCTA() {
             Sumate a las familias que ya están esperando Smarty. Escribinos por
             WhatsApp y te avisamos apenas esté disponible.
           </p>
-          <WhatsAppButton><p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold' }}>Quiero acceso anticipado</p></WhatsAppButton>
+          <WhatsAppButton><p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 'bold' }}>Quiero acceso anticipado</p></WhatsAppButton>
           <div className="cta-note">
-            <CheckIcon /> Te responde una persona real. Sin compromiso.
+            Te responde una persona real. Sin compromiso.
           </div>
         </div>
       </div>

@@ -45,7 +45,7 @@ export const HeartIcon = (props) => (
 );
 
 export const ShieldIcon = (props) => (
-  <svg viewBox="0 0 24 24" {...stroke} {...props}>
+<svg viewBox="0 0 21 21" {...stroke} {...props}>
     <path d="M12 3 5 6v5c0 4.5 3 7.7 7 9 4-1.3 7-4.5 7-9V6l-7-3Z" />
     <path d="m9 12 2 2 4-4" />
   </svg>
