@@ -3,8 +3,7 @@ import { BRAND } from './config';
 import Mascot from './components/Mascot';
 import { PhoneFrame, ScreenChat, ScreenVideos } from './components/AppScreens';
 import PhoneDemo from './components/PhoneDemo';
-import WhatsAppButton, { WhatsAppFloat } from './components/WhatsAppButton';
-import WaitlistModal from './components/WaitlistModal';
+import RegisterButton from './components/RegisterButton';
 import {
   PlayIcon,
   SearchIcon,
@@ -64,7 +63,7 @@ function Navbar() {
           <a href="#faq">Preguntas</a>
         </nav>
         <div className="nav-cta">
-          <WhatsAppButton>Acceso anticipado</WhatsAppButton>
+          <RegisterButton source="navbar">Registrarse</RegisterButton>
         </div>
       </div>
     </header>
@@ -90,7 +89,7 @@ function Hero() {
             apropiado. Todo el conocimiento, sin que tengas que revisar nada.
           </p>
           <div className="hero-actions">
-            <WhatsAppButton>Quiero acceso anticipado</WhatsAppButton>
+            <RegisterButton source="hero">Registrarse</RegisterButton>
             <a className="btn btn-ghost" href="#solucion">
               Ver cómo funciona
             </a>
@@ -446,13 +445,9 @@ function FinalCTA() {
           <Mascot className="owl-badge" />
           <h2>Dale un internet donde aprenda sin riesgos</h2>
           <p>
-            Sumate a las familias que ya están esperando Smarty. Escribinos por
-            WhatsApp y te avisamos apenas esté disponible.
+            Sumate a las familias que ya están esperando Smarty.
           </p>
-          <WhatsAppButton><p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 'bold' }}>Quiero acceso anticipado</p></WhatsAppButton>
-          <div className="cta-note">
-            Te responde una persona real. Sin compromiso.
-          </div>
+          <RegisterButton source="final-cta">Registrarse</RegisterButton>
         </div>
       </div>
     </section>
@@ -526,8 +521,6 @@ export default function App() {
         <FinalCTA />
       </main>
       <Footer />
-      <WhatsAppFloat />
-      <WaitlistModal />
     </>
   );
 }
