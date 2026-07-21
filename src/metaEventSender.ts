@@ -22,7 +22,9 @@ function getFbc(): string | undefined {
 
 export async function sendMetaEvent(
   eventName: MetaEvent,
-  eventId: string
+  eventId: string,
+  // Opcional: email o teléfono del lead. Se hashea en el server (nunca en crudo a Meta).
+  contact?: string
 ): Promise<void> {
   const response = await fetch("/api/meta-event", {
     method: "POST",
@@ -32,6 +34,7 @@ export async function sendMetaEvent(
     body: JSON.stringify({
       eventName,
       eventId,
+      contact,
       fbp: getCookie("_fbp"),
       fbc: getFbc(),
       eventSourceUrl:

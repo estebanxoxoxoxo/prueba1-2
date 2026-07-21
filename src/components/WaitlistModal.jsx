@@ -69,7 +69,8 @@ export default function WaitlistModal() {
         if (typeof window.fbq === 'function') {
           window.fbq('track', 'CompleteRegistration', {}, { eventID: eventId });
         }
-        sendMetaEvent(MetaEvent.CompleteRegistration, eventId).catch(() => {});
+        // Pasamos el contacto: el server lo hashea (email/teléfono) para Advanced Matching.
+        sendMetaEvent(MetaEvent.CompleteRegistration, eventId, value).catch(() => {});
         if (typeof window.hj === 'function') window.hj('event', 'waitlist_submit');
       } catch { /* noop */ }
     } catch {

@@ -1,9 +1,15 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { createHash } from "crypto";
 
 export const config = {
   runtime: "nodejs",
 };
+
+// Meta exige SHA-256 (hex) para los datos personales (em, ph).
+function sha256(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
 
 // Inicializa Firebase Admin una sola vez y reusa la instancia.
 function getDb() {
@@ -45,6 +51,30 @@ export default async function handler(req: any, res: any) {
     req.headers?.referer ||
     (req.headers?.host ? `https://${req.headers.host}/` : undefined);
 
+  // Advanced Matching: normalizamos y hasheamos el contacto (email o teléfono).
+  // Si tiene "@" → email (trim + minúsculas). Si no → teléfono (solo dígitos).
+  const rawContact =
+    typeof req.body?.contact === "string" ? req.body.contact.trim() : "";
+  let emailHash: string | undefined;
+  let phoneHash: string | undefined;
+  let contactType: "email" | "phone" | null = null;
+
+  if (rawContact) {
+    if (rawContact.includes("@")) {
+      contactType = "email";
+      emailHash = sha256(rawContact.toLowerCase());
+    } else {
+      const digits = rawContact.replace(/\D/g, "");
+      if (digits) {
+        contactType = "phone";
+        phoneHash = sha256(digits);
+      }
+    }
+  }
+
+  // external_id: identificador estable del lead (usamos el hash del contacto).
+  const externalId = emailHash || phoneHash;
+
   const payload = {
     data: [
       {
@@ -61,6 +91,10 @@ export default async function handler(req: any, res: any) {
           // fbp (navegador) y fbc (clic del ad) → mejoran matching/atribución.
           fbp,
           fbc,
+          // Advanced Matching (hasheado SHA-256). undefined se omite en el JSON.
+          em: emailHash ? [emailHash] : undefined,
+          ph: phoneHash ? [phoneHash] : undefined,
+          external_id: externalId ? [externalId] : undefined,
         },
       },
     ],
@@ -83,6 +117,11 @@ export default async function handler(req: any, res: any) {
     email: req.user?.email,        // si la conoces
     fbp,
     fbc,
+    // Advanced Matching: qué tipo de contacto y su hash (para cruzar con Meta si hace falta).
+    contactType,
+    emailHash,
+    phoneHash,
+    externalId,
     eventSourceUrl,
   };
 
