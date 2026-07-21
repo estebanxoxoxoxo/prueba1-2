@@ -1,17 +1,30 @@
 import { useEffect } from 'react';
 import { BRAND } from './config';
 import Mascot from './components/Mascot';
+import { PhoneFrame, ScreenHome, ScreenChat, ScreenVideos } from './components/AppScreens';
 import WhatsAppButton, { WhatsAppFloat } from './components/WhatsAppButton';
 import {
   PlayIcon,
-  ImageIcon,
   SearchIcon,
+  SparkleIcon,
   HeartIcon,
   ShieldIcon,
+  ShieldFilledIcon,
   CheckIcon,
+  XIcon,
+  EyeOffIcon,
+  AlertIcon,
+  BatteryLowIcon,
+  CpuIcon,
+  NoAdsIcon,
+  UsersOffIcon,
+  SlidersIcon,
+  ChevronIcon,
 } from './components/icons';
 import { sendMetaEvent } from './metaEventSender';
 import { MetaEvent } from './metaEventsTypes';
+
+const NCES_URL = 'https://nces.ed.gov/programs/coe/indicator/tgk';
 
 /* Anima elementos .reveal cuando entran en viewport. */
 function useReveal() {
@@ -26,13 +39,14 @@ function useReveal() {
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.14 }
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
 }
 
+/* ============================================================ NAVBAR */
 function Navbar() {
   return (
     <header className="nav">
@@ -45,89 +59,100 @@ function Navbar() {
           <a href="#problema">El problema</a>
           <a href="#solucion">La solución</a>
           <a href="#como">Cómo funciona</a>
+          <a href="#faq">Preguntas</a>
         </nav>
         <div className="nav-cta">
-          <WhatsAppButton>Hablar con nosotros</WhatsAppButton>
+          <WhatsAppButton>Acceso anticipado</WhatsAppButton>
         </div>
       </div>
     </header>
   );
 }
 
+/* ============================================================ HERO */
 function Hero() {
   return (
     <section className="hero" id="top">
       <div className="container hero-grid">
         <div className="hero-copy">
           <span className="eyebrow">
-            <ShieldIcon style={{ width: 15, height: 15 }} /> Internet seguro para niños
+            <ShieldIcon /> Internet seguro para aprender · 6 a 13 años
           </span>
           <h1>
-            Cuida a tu hijo de la{' '}
-            <span className="mark">basura de internet</span>
+            Todo lo bueno de internet para que aprenda.{' '}
+            <span className="mark">Nada</span> de lo malo.
           </h1>
           <p className="hero-sub">
-            Hacerlo solo es <b>agotador y frustrante</b>. Smarty es la única app
-            donde tu hijo disfruta imágenes, contenido y videos{' '}
-            <b>100% moderados</b>. Todo lo bueno, nada de lo malo.
+            Cuando tu hijo busca un video, una imagen o un tema, Smarty rastrea
+            internet, <b>analiza cada resultado</b> y solo le muestra lo
+            apropiado. Todo el conocimiento, sin que tengas que revisar nada.
           </p>
           <div className="hero-actions">
-            <WhatsAppButton>Contactar por WhatsApp</WhatsAppButton>
+            <WhatsAppButton>Quiero acceso anticipado</WhatsAppButton>
             <a className="btn btn-ghost" href="#solucion">
               Ver cómo funciona
             </a>
           </div>
           <div className="hero-trust">
-            <span className="stars">★★★★★</span>
-            <span>Pensada por y para familias</span>
+            <ShieldFilledIcon style={{ width: 26, height: 26, color: 'var(--green)', flex: 'none' }} />
+            <div className="t-copy">
+              <b>Diseñada para familias que quieren proteger la integridad de sus hijos de 6 a 13 años."
+</b>
+              <span>y para cualquiera que cuide lo que su hijo ve.</span>
+            </div>
           </div>
         </div>
 
         <div className="hero-visual">
-          <span className="float-ico fi-1"><PlayIcon /></span>
-          <span className="float-ico fi-2"><ImageIcon /></span>
-          <span className="float-ico fi-3"><SearchIcon /></span>
-          <span className="float-ico fi-4"><HeartIcon /></span>
-
-          <div className="hero-card">
-            <div className="owl-stage">
-              <span className="owl-glow" aria-hidden="true" />
-              <Mascot className="hero-owl" />
-              <span className="owl-shadow" aria-hidden="true" />
-            </div>
-            <h3>Una única app donde tu hijo puede</h3>
-            <div className="chip-row">
-              <span className="chip green"><PlayIcon /> imágenes</span>
-              <span className="chip purple"><ImageIcon /> contenido</span>
-              <span className="chip blue"><PlayIcon /> videos</span>
-            </div>
-            <div className="moderated-badge">
-              <span className="dash" aria-hidden="true">〉〉</span>
-              100% moderado
-              <span className="dash" aria-hidden="true">〈〈</span>
-            </div>
-          </div>
+          <span className="halo" aria-hidden="true" />
+          <PhoneFrame label="Pantalla de inicio de Smarty">
+            <ScreenHome />
+          </PhoneFrame>
         </div>
       </div>
     </section>
   );
 }
 
+/* ============================================================ GARANTÍAS */
+const guarantees = [
+  { icon: <CpuIcon />, text: 'Moderación automática' },
+  { icon: <NoAdsIcon />, text: 'Sin anuncios' },
+  { icon: <UsersOffIcon />, text: 'Sin chats con extraños' },
+  { icon: <SlidersIcon />, text: 'Contenido por edad' },
+];
+
+function Guarantees() {
+  return (
+    <section className="guarantees">
+      <div className="container">
+        {guarantees.map((g) => (
+          <span className="guarantee" key={g.text}>
+            {g.icon}
+            {g.text}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================ PROBLEMA + DATO */
 const pains = [
   {
-    ico: '😵‍💫',
-    title: 'Vigilancia constante',
-    text: 'Estar encima de cada video y cada búsqueda para que no aparezca nada inapropiado.',
+    ico: <EyeOffIcon />,
+    title: 'El filtro sos vos',
+    text: 'Revisar cada video, cada búsqueda y cada imagen para que no aparezca nada inapropiado. Un trabajo que no termina nunca.',
   },
   {
-    ico: '🔞',
-    title: 'Contenido tóxico',
-    text: 'Violencia, lenguaje adulto y basura que aparece de la nada, incluso en apps “para niños”.',
+    ico: <AlertIcon />,
+    title: 'Por tu miedo, aprende menos',
+    text: 'Para protegerlo le limitás el acceso. Y se pierde justo lo bueno: todo el conocimiento que internet tiene para enseñarle.',
   },
   {
-    ico: '😩',
-    title: 'Culpa y agotamiento',
-    text: 'Bloquear todo tampoco es la solución. Quieres que aprenda y se divierta, sin riesgos.',
+    ico: <BatteryLowIcon />,
+    title: 'Nunca desconectás',
+    text: 'Bloquear todo no alcanza y estar encima, tampoco. Querés que explore y aprenda, pero tranquilo.',
   },
 ];
 
@@ -135,14 +160,37 @@ function Problem() {
   return (
     <section className="section problem" id="problema">
       <div className="container">
-        <div className="section-head reveal">
-          <span className="eyebrow">El problema</span>
-          <h2>Cuidar a tu hijo de la basura de internet es un trabajo agotador</h2>
-          <p>Y no debería recaer solo sobre ti.</p>
+        <div className="stat-feature reveal">
+          <div className="stat-big">
+            <div className="num">80%</div>
+            <div className="cap">
+              de las familias estan preocupadas por el entorno al que están expuestos sus hijos.
+            </div>
+            <div className="src">
+              Fuente:{' '}
+              <a href={NCES_URL} target="_blank" rel="noopener noreferrer">
+                NCES · Condition of Education (2019)
+              </a>
+            </div>
+          </div>
+          <div className="stat-copy">
+            <span className="eyebrow"><AlertIcon /> El problema</span>
+            <h2>El instinto de proteger es real. El de que aprenda, también.</h2>
+            <p>
+              Cuidar lo que tu hijo ve en internet es agotador, y no debería
+              recaer solo sobre vos. Pero bloquearlo todo tampoco es la solución:
+              internet es también el lugar donde más puede aprender.
+            </p>
+            <p className="pull">
+              El problema no es internet. Es no poder darle lo bueno sin
+              exponerlo a lo malo.
+            </p>
+          </div>
         </div>
+
         <div className="pain-grid">
-          {pains.map((p) => (
-            <div className="pain-card reveal" key={p.title}>
+          {pains.map((p, i) => (
+            <div className={`pain-card reveal d${i + 1}`} key={p.title}>
               <div className="pico">{p.ico}</div>
               <h3>{p.title}</h3>
               <p>{p.text}</p>
@@ -154,64 +202,84 @@ function Problem() {
   );
 }
 
-const features = [
+/* ============================================================ SOLUCIÓN / RECORRIDO */
+const walk = [
   {
-    color: 'var(--green)',
-    icon: <PlayIcon />,
-    title: 'Imágenes seguras',
-    text: 'Un catálogo visual cuidado, sin sustos ni contenido para adultos.',
+    id: 'chat',
+    icon: <SparkleIcon />,
+    chip: 'Chat con IA',
+    title: 'Un chat con IA que además le enseña',
+    text: 'Tu hijo pregunta lo que quiera y recibe respuestas seguras, a su nivel. Cuando pide un video o un artículo, Smarty se lo trae ya moderado.',
+    bullets: ['Respuestas a su edad', 'Conversación siempre moderada', 'Le sugiere videos y artículos seguros'],
+    screen: <ScreenChat />,
+    reverse: false,
   },
   {
-    color: 'var(--purple-2)',
-    icon: <ImageIcon />,
-    title: 'Contenido con propósito',
-    text: 'Material que entretiene y enseña, filtrado para su edad.',
-  },
-  {
-    color: 'var(--blue)',
+    id: 'videos',
     icon: <PlayIcon />,
-    title: 'Videos moderados',
-    text: 'Cada video pasa un control humano y automático antes de llegar a tu hijo.',
+    chip: 'Buscar videos',
+    title: 'Busca videos de todo, ve solo lo bueno',
+    text: 'Escribí cualquier tema y Smarty rastrea internet, analiza cada video y solo muestra los apropiados. Sin recomendaciones raras, sin sorpresas.',
+    bullets: ['Rastrea y analiza en tiempo real', 'Canales educativos favoritos', 'Cero contenido inapropiado'],
+    screen: <ScreenVideos />,
+    reverse: true,
   },
 ];
 
-function Features() {
+function Walkthrough() {
   return (
-    <section className="section features" id="solucion">
+    <section className="section walk" id="solucion">
       <div className="container">
         <div className="section-head reveal">
-          <span className="eyebrow">La solución</span>
-          <h2>Conoce a Smarty</h2>
-          <p>Una única app, tres formas de disfrutar internet sin peligros.</p>
+          <span className="eyebrow"><SparkleIcon /> La solución</span>
+          <h2>Así se ve Smarty por dentro</h2>
+          <p>
+            Un solo entorno donde tu hijo accede a todo lo bueno de internet
+            —chat, contenidos, imágenes y videos— siempre moderado.
+          </p>
         </div>
-        <div className="feat-grid">
-          {features.map((f) => (
-            <div className="feat-card reveal" key={f.title}>
-              <div className="feat-ico" style={{ background: f.color }}>
-                {f.icon}
-              </div>
-              <h3>{f.title}</h3>
-              <p>{f.text}</p>
+
+        {walk.map((w) => (
+          <div className={`walk-row ${w.reverse ? 'rev' : ''} reveal`} key={w.id}>
+            <div className="walk-copy">
+              <span className="walk-chip">{w.icon} {w.chip}</span>
+              <h3>{w.title}</h3>
+              <p>{w.text}</p>
+              <ul className="walk-list">
+                {w.bullets.map((b) => (
+                  <li key={b}><CheckIcon /> {b}</li>
+                ))}
+              </ul>
             </div>
-          ))}
-        </div>
+            <div className="walk-phone">
+              <span className="walk-glow" aria-hidden="true" />
+              <PhoneFrame label={`Pantalla de Smarty: ${w.chip}`}>
+                {w.screen}
+              </PhoneFrame>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
 }
 
-const steps = [
+/* ============================================================ CÓMO FUNCIONA (pipeline) */
+const pipeline = [
   {
-    title: 'Descarga Smarty',
-    text: 'Instala la app y crea el perfil de tu hijo en menos de 2 minutos.',
+    icon: <SearchIcon />,
+    title: 'Tu hijo busca',
+    text: 'Escribe un tema, una imagen o un video que quiere ver.',
   },
   {
-    title: 'Todo llega filtrado',
-    text: 'Imágenes, contenido y videos pasan por moderación antes de mostrarse.',
+    icon: <CpuIcon />,
+    title: 'Smarty analiza todo',
+    text: 'Rastrea internet y revisa automáticamente cada resultado antes de mostrar nada.',
   },
   {
-    title: 'Tú, tranquilo',
-    text: 'Tu hijo explora y aprende mientras tú dejas de vigilar cada pantalla.',
+    icon: <ShieldFilledIcon />,
+    title: 'Solo ve lo apropiado',
+    text: 'Lo bueno pasa; lo inapropiado se bloquea. Filtrado a su edad, en tiempo real.',
   },
 ];
 
@@ -220,14 +288,16 @@ function HowItWorks() {
     <section className="section how" id="como">
       <div className="container">
         <div className="section-head reveal">
-          <span className="eyebrow">Cómo funciona</span>
-          <h2>Seguro en 3 pasos</h2>
-          <p>Sin configuraciones complicadas ni conocimientos técnicos.</p>
+          <span className="eyebrow"><CpuIcon /> Cómo funciona</span>
+          <h2>Moderación automática, en tiempo real</h2>
+          <p>En el mismo instante en que busca algo, Smarty ya lo analizó.</p>
         </div>
-        <div className="steps">
-          {steps.map((s) => (
-            <div className="step reveal" key={s.title}>
-              <div className="num" />
+
+        <div className="pipeline">
+          {pipeline.map((s, i) => (
+            <div className={`pipe reveal d${i + 1}`} key={s.title}>
+              <span className="pipe-ico">{s.icon}</span>
+              <span className="pipe-num">{i + 1}</span>
               <h3>{s.title}</h3>
               <p>{s.text}</p>
             </div>
@@ -238,27 +308,76 @@ function HowItWorks() {
   );
 }
 
+/* ============================================================ COMPARATIVA */
+const compareRows = [
+  'Contenido moderado por edad',
+  'Acceso a todo el conocimiento',
+  'Chat con IA seguro',
+  'Sin anuncios ni recomendaciones raras',
+  'Sin chats con extraños',
+  'Sin que revises cada cosa',
+];
+
+function Compare() {
+  return (
+    <section className="section compare">
+      <div className="container">
+        <div className="section-head reveal">
+          <span className="eyebrow"><ShieldIcon /> Por qué Smarty</span>
+          <h2>Lo que cambia con Smarty</h2>
+          <p>Frente al internet abierto o a las apps genéricas “para niños”.</p>
+        </div>
+
+        <div className="compare-table reveal">
+          <div className="compare-row compare-head">
+            <div className="compare-cell c-feature">Lo que importa</div>
+            <div className="compare-cell c-smarty">
+              <Mascot className="owl-badge" /> Smarty
+            </div>
+            <div className="compare-cell c-other">Internet abierto</div>
+          </div>
+          {compareRows.map((r) => (
+            <div className="compare-row" key={r}>
+              <div className="compare-cell c-feature">{r}</div>
+              <div className="compare-cell c-smarty">
+                <span className="yes"><CheckIcon /></span>
+              </div>
+              <div className="compare-cell c-other">
+                <span className="no"><XIcon /></span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================ BANDA DE CONFIANZA */
 function TrustBand() {
   return (
     <section className="trust-band">
       <div className="container">
         <h2 className="reveal">
-          <HeartIcon style={{ width: 30, height: 30, verticalAlign: '-4px', color: 'var(--pink)' }} />{' '}
           Todo <span className="lo-bueno">lo bueno</span> de internet, nada de{' '}
           <span className="lo-malo">lo malo</span>
         </h2>
-        <div className="trust-stats">
+        <p className="tb-sub reveal">
+          Para que tu hijo aprenda de todo, sin que veas nada que no querés que
+          vea.
+        </p>
+        <div className="trust-stats reveal">
           <div className="trust-stat">
             <div className="n">100%</div>
-            <div className="l">Contenido moderado</div>
+            <div className="l">del contenido, analizado antes de mostrarse</div>
           </div>
           <div className="trust-stat">
             <div className="n">0</div>
-            <div className="l">Sustos inesperados</div>
+            <div className="l">anuncios y chats con extraños</div>
           </div>
           <div className="trust-stat">
-            <div className="n">3</div>
-            <div className="l">Formatos: imagen, contenido y video</div>
+            <div className="n">6–13</div>
+            <div className="l">años: la edad para la que está pensada</div>
           </div>
         </div>
       </div>
@@ -266,21 +385,74 @@ function TrustBand() {
   );
 }
 
+/* ============================================================ FAQ */
+const faqs = [
+  {
+    q: '¿Desde qué edad es Smarty?',
+    a: 'Está pensada para niños de 6 a 13 años. Los contenidos y el chat se adaptan a la edad que configures.',
+  },
+  {
+    q: '¿Cómo se modera el contenido?',
+    a: 'De forma automática: apenas tu hijo busca algo, Smarty rastrea internet y analiza cada búsqueda, imagen y video antes de mostrarlo. Nada aparece sin pasar por ese control.',
+  },
+  {
+    q: '¿Tiene anuncios o recomienda cosas raras?',
+    a: 'No. Sin anuncios y sin algoritmos diseñados para engancharlo a ver “una más”. Solo contenido que suma.',
+  },
+  {
+    q: '¿Puede hablar con extraños?',
+    a: 'No. Smarty es un entorno cerrado y seguro: tu hijo no queda expuesto a desconocidos.',
+  },
+  {
+    q: '¿Reemplaza al control parental?',
+    a: 'Es más simple que eso. En lugar de perseguir cada app y cada permiso, tu hijo tiene un único lugar seguro donde vos ponés las reglas.',
+  },
+  {
+    q: '¿Cuándo está disponible y cuánto cuesta?',
+    a: 'Está en desarrollo y muy avanzada. Tendrá suscripción mensual con prueba gratis. Escribinos por WhatsApp y te avisamos apenas esté lista, con todos los detalles.',
+  },
+];
+
+function Faq() {
+  return (
+    <section className="section faq" id="faq">
+      <div className="container">
+        <div className="section-head reveal">
+          <span className="eyebrow"><HeartIcon /> Preguntas frecuentes</span>
+          <h2>Lo que las familias nos preguntan</h2>
+          <p>Y si te queda alguna duda, escribinos por WhatsApp.</p>
+        </div>
+        <div className="faq-list reveal">
+          {faqs.map((f) => (
+            <details className="faq-item" key={f.q}>
+              <summary>
+                {f.q}
+                <ChevronIcon className="chev" />
+              </summary>
+              <div className="faq-body">{f.a}</div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================ CTA FINAL */
 function FinalCTA() {
   return (
     <section className="section final-cta">
       <div className="container">
         <div className="cta-card reveal">
           <Mascot className="owl-badge" />
-          <h2>Dale a tu hijo un internet sin basura</h2>
+          <h2>Dale un internet donde aprenda sin riesgos</h2>
           <p>
-            Escríbenos por WhatsApp y te contamos cómo empezar con Smarty hoy
-            mismo. Sin compromiso.
+            Sumate a las familias que ya están esperando Smarty. Escribinos por
+            WhatsApp y te avisamos apenas esté disponible.
           </p>
-          <WhatsAppButton>Contactar por WhatsApp</WhatsAppButton>
+          <WhatsAppButton>Quiero acceso anticipado</WhatsAppButton>
           <div className="cta-note">
-            <CheckIcon style={{ width: 14, height: 14, verticalAlign: '-2px' }} />{' '}
-            Respuesta rápida de una persona real.
+            <CheckIcon /> Te responde una persona real. Sin compromiso.
           </div>
         </div>
       </div>
@@ -288,51 +460,71 @@ function FinalCTA() {
   );
 }
 
+/* ============================================================ FOOTER */
 function Footer() {
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-top">
-          <a className="brand" href="#top">
-            <Mascot className="owl-badge" />
-            Smarty
-          </a>
+          <div>
+            <a className="brand" href="#top">
+              <Mascot className="owl-badge" />
+              Smarty
+            </a>
+            <p className="foot-tag">
+              Un entorno seguro para que los chicos de 6 a 13 años aprendan de
+              todo lo bueno de internet, sin nada de lo malo.
+            </p>
+          </div>
           <nav className="footer-links">
             <a href="#problema">El problema</a>
             <a href="#solucion">La solución</a>
             <a href="#como">Cómo funciona</a>
+            <a href="#faq">Preguntas</a>
           </nav>
         </div>
         <div className="footer-bottom">
-          © {new Date().getFullYear()} {BRAND.name}. {BRAND.tagline}.
+          <span>
+            © {new Date().getFullYear()} {BRAND.name}. {BRAND.tagline}.
+          </span>
+          <span>
+            Dato: 80% —{' '}
+            <a href={NCES_URL} target="_blank" rel="noopener noreferrer">
+              NCES, Condition of Education (2019)
+            </a>
+          </span>
         </div>
       </div>
     </footer>
   );
 }
 
+/* ============================================================ APP */
 export default function App() {
   useReveal();
 
-  useEffect(()=>{
+  useEffect(() => {
     const eventId = crypto.randomUUID();
 
-    fbq("track", "PageView", {}, { eventID: eventId });
-    fbq("track", "ViewContent", {}, { eventID: eventId });
+    fbq('track', 'PageView', {}, { eventID: eventId });
+    fbq('track', 'ViewContent', {}, { eventID: eventId });
 
-    sendMetaEvent(MetaEvent.PageView, eventId)
-    sendMetaEvent(MetaEvent.ViewContent, eventId)  
-  },[])
+    sendMetaEvent(MetaEvent.PageView, eventId);
+    sendMetaEvent(MetaEvent.ViewContent, eventId);
+  }, []);
 
   return (
     <>
       <Navbar />
       <main>
         <Hero />
+        <Guarantees />
         <Problem />
-        <Features />
+        <Walkthrough />
         <HowItWorks />
+        <Compare />
         <TrustBand />
+        <Faq />
         <FinalCTA />
       </main>
       <Footer />

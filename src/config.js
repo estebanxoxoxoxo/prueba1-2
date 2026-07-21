@@ -8,7 +8,7 @@ export const WHATSAPP_NUMBER = '34687080377';
 
 // Mensaje que se autocompleta al abrir el chat.
 export const WHATSAPP_MESSAGE =
-  '¡Hola! Quiero más información sobre Smarty para mi hijo 🦉';
+  '¡Hola! Quiero acceso anticipado a Smarty para mi hijo/a 🦉';
 
 // Construye el enlace de WhatsApp (funciona en móvil y escritorio).
 export const whatsappUrl = () =>
