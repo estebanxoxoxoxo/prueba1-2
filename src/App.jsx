@@ -509,7 +509,6 @@ export default function App() {
     fbq('track', 'PageView', {}, { eventID: eventId });
     fbq('track', 'ViewContent', {}, { eventID: eventId });
 
-    sendMetaEvent(MetaEvent.PageView, eventId);
     sendMetaEvent(MetaEvent.ViewContent, eventId);
   }, []);
 
