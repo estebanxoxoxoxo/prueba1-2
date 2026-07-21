@@ -98,7 +98,6 @@ function Hero() {
             <div className="t-copy">
               <b>Diseñada para familias que quieren proteger la integridad de sus hijos de 6 a 13 años."
 </b>
-              <span>y para cualquiera que cuide lo que su hijo ve.</span>
             </div>
           </div>
         </div>
@@ -450,7 +449,7 @@ function FinalCTA() {
             Sumate a las familias que ya están esperando Smarty. Escribinos por
             WhatsApp y te avisamos apenas esté disponible.
           </p>
-          <WhatsAppButton>Quiero acceso anticipado</WhatsAppButton>
+          <WhatsAppButton><p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold' }}>Quiero acceso anticipado</p></WhatsAppButton>
           <div className="cta-note">
             <CheckIcon /> Te responde una persona real. Sin compromiso.
           </div>

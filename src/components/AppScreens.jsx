@@ -80,7 +80,7 @@ export function ScreenHome() {
           <div className="opt" key={o.t}>
             <span className="opt-ico">{o.ico}</span>
             <span className="opt-txt">
-              <h5>{o.t}</h5>
+              <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{o.t}</p>
               <p>{o.s}</p>
             </span>
             <ChevronIcon className="opt-chev" />
@@ -138,8 +138,8 @@ export function ScreenChat() {
                 <PlayIcon />
               </span>
               <div className="vidcard-meta">
-                <h6>La fotosíntesis explicada fácil</h6>
-                <p>Smile and Learn <VerifiedIcon /></p>
+                <p style={{ fontWeight: 'bold', fontSize: '0.65rem', lineHeight: '1.2' }}>La fotosíntesis explicada fácil</p>
+                <p style={{  fontSize: '0.5rem', lineHeight: '1.2', marginTop: '2px' }}>Smile and Learn <VerifiedIcon /></p>
               </div>
             </div>
           </div>
@@ -178,7 +178,7 @@ export function ScreenVideos() {
 
       <div className="vid-search">
         <SearchIcon />
-        <span>Buscar videos sobre cualquier tema…</span>
+        <span>Buscar videos…</span>
       </div>
 
       <div className="vid-sec">
@@ -206,7 +206,7 @@ export function ScreenVideos() {
               <em>{v.d}</em>
             </span>
             <div className="vidrow-meta">
-              <h6>{v.t}</h6>
+              <p style={{ fontWeight: 'bold', fontSize: '0.65rem', lineHeight: '1.2' }}>{v.t}</p>
               <p className="vidrow-ch">{v.ch} <VerifiedIcon /></p>
               <p className="vidrow-stats">{v.v}</p>
             </div>
