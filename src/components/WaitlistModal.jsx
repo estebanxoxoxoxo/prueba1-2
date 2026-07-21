@@ -62,15 +62,15 @@ export default function WaitlistModal() {
       if (!res.ok) throw new Error('request_failed');
       setStatus('success');
 
-      // Conversión: CompleteRegistration por navegador (pixel) y servidor (CAPI).
+      // Conversión: Lead por navegador (pixel) y servidor (CAPI).
       // Mismo eventID en ambos → Meta deduplica.
       try {
         const eventId = crypto.randomUUID();
         if (typeof window.fbq === 'function') {
-          window.fbq('track', 'CompleteRegistration', {}, { eventID: eventId });
+          window.fbq('track', 'Lead', {}, { eventID: eventId });
         }
         // Pasamos el contacto: el server lo hashea (email/teléfono) para Advanced Matching.
-        sendMetaEvent(MetaEvent.CompleteRegistration, eventId, value).catch(() => {});
+        sendMetaEvent(MetaEvent.Lead, eventId, value).catch(() => {});
         if (typeof window.hj === 'function') window.hj('event', 'waitlist_submit');
       } catch { /* noop */ }
     } catch {
