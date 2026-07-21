@@ -262,3 +262,17 @@ export const VerifiedIcon = (props) => (
     <path d="m12 2 2.2 1.6 2.7-.2 1 2.5 2.3 1.4-.6 2.6.9 2.5-2 1.8v2.7l-2.6.6-1.5 2.3-2.6-.7L12 22l-2.2-1.6-2.7.2-1-2.5L3.8 16l.6-2.6-.9-2.5 2-1.8V6.4l2.6-.6L11.6 3.5 12 2Zm-1 12.5 4.7-4.7-1.4-1.4L11 11.7 9.7 10.4l-1.4 1.4L11 14.5Z" />
   </svg>
 );
+
+export const BellIcon = (props) => (
+  <svg viewBox="0 0 24 24" {...stroke} {...props}>
+    <path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.5 5.8 2 6H4c.5-.2 2-1.5 2-6Z" />
+    <path d="M10 19a2 2 0 0 0 4 0" />
+  </svg>
+);
+
+export const MailIcon = (props) => (
+  <svg viewBox="0 0 24 24" {...stroke} {...props}>
+    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+    <path d="m4 7 8 6 8-6" />
+  </svg>
+);

@@ -1,49 +1,28 @@
-import { whatsappUrl } from '../config';
-import { WhatsAppIcon } from './icons';
+import { BellIcon } from './icons';
+import { openWaitlist } from '../waitlist';
 
-// Botón de WhatsApp reutilizable.
-export default function WhatsAppButton({ children = 'Contactar por WhatsApp', className = '' }) {
-  const track = () => {
-    // Registra el clic en Hotjar si está cargado.
-    if (typeof window !== 'undefined' && typeof window.hj === 'function') {
-      window.hj('event', 'whatsapp_click');
-    }
-  };
-
+// Botón principal: antes abría WhatsApp, ahora abre el popup de lista de espera.
+export default function WhatsAppButton({ children = 'Quiero acceso anticipado', className = '' }) {
   return (
-    <a
-      className={`btn btn-wa ${className}`}
-      href={whatsappUrl()}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={track}
-    >
-      <WhatsAppIcon />
+    <button type="button" className={`btn btn-wa ${className}`} onClick={openWaitlist}>
+      <BellIcon />
       {children}
-    </a>
+    </button>
   );
 }
 
-// Botón flotante fijo (esquina inferior derecha).
+// Botón flotante fijo (esquina inferior derecha) → también abre el popup.
 export function WhatsAppFloat() {
-  const track = () => {
-    if (typeof window !== 'undefined' && typeof window.hj === 'function') {
-      window.hj('event', 'whatsapp_click_float');
-    }
-  };
-
   return (
-    <a
+    <button
+      type="button"
       className="wa-float"
-      href={whatsappUrl()}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Contactar por WhatsApp"
-      onClick={track}
+      aria-label="Avísame cuando esté disponible"
+      onClick={openWaitlist}
     >
       <span className="wa-pulse" aria-hidden="true" />
-      <WhatsAppIcon />
-      <span className="wa-label">Escríbenos</span>
-    </a>
+      <BellIcon />
+      <span className="wa-label">Avísame</span>
+    </button>
   );
 }

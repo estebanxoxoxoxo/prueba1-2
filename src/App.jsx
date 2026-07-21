@@ -3,6 +3,7 @@ import { BRAND } from './config';
 import Mascot from './components/Mascot';
 import { PhoneFrame, ScreenHome, ScreenChat, ScreenVideos } from './components/AppScreens';
 import WhatsAppButton, { WhatsAppFloat } from './components/WhatsAppButton';
+import WaitlistModal from './components/WaitlistModal';
 import {
   PlayIcon,
   SearchIcon,
@@ -528,6 +529,7 @@ export default function App() {
       </main>
       <Footer />
       <WhatsAppFloat />
+      <WaitlistModal />
     </>
   );
 }
