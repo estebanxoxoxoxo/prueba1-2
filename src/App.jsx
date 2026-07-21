@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { BRAND } from './config';
 import Mascot from './components/Mascot';
-import { PhoneFrame, ScreenHome, ScreenChat, ScreenVideos } from './components/AppScreens';
+import { PhoneFrame, ScreenChat, ScreenVideos } from './components/AppScreens';
+import PhoneDemo from './components/PhoneDemo';
 import WhatsAppButton, { WhatsAppFloat } from './components/WhatsAppButton';
 import WaitlistModal from './components/WaitlistModal';
 import {
@@ -105,9 +106,7 @@ function Hero() {
 
         <div className="hero-visual">
           <span className="halo" aria-hidden="true" />
-          <PhoneFrame label="Pantalla de inicio de Smarty">
-            <ScreenHome />
-          </PhoneFrame>
+          <PhoneDemo />
         </div>
       </div>
     </section>
