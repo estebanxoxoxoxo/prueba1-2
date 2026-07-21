@@ -35,6 +35,16 @@ export default async function handler(req: any, res: any) {
   //@ts-ignore
   const accessToken = process.env.META_ACCESS_TOKEN;
 
+  // Preferimos lo que manda el cliente (más confiable), con fallback a cookies.
+  const fbp = req.body?.fbp || req.cookies?._fbp || undefined;
+  const fbc = req.body?.fbc || req.cookies?._fbc || undefined;
+  // event_source_url: SIEMPRE debe ir (Meta lo exige para atribución/optimización).
+  // Cliente → referer → como último recurso lo armamos desde el host.
+  const eventSourceUrl =
+    req.body?.eventSourceUrl ||
+    req.headers?.referer ||
+    (req.headers?.host ? `https://${req.headers.host}/` : undefined);
+
   const payload = {
     data: [
       {
@@ -42,11 +52,15 @@ export default async function handler(req: any, res: any) {
         event_time: Math.floor(Date.now() / 1000),
         event_id: eventId,
         action_source: "website",
+        event_source_url: eventSourceUrl,
         user_data: {
           client_ip_address:
             req.headers["x-forwarded-for"] ||
             req.socket?.remoteAddress,
           client_user_agent: req.headers["user-agent"],
+          // fbp (navegador) y fbc (clic del ad) → mejoran matching/atribución.
+          fbp,
+          fbc,
         },
       },
     ],
@@ -67,8 +81,9 @@ export default async function handler(req: any, res: any) {
     timezone: req.headers["x-vercel-ip-timezone"] || null,
     userId: req.user?.id,          // si tienes login
     email: req.user?.email,        // si la conoces
-    fbp: req.cookies?._fbp,
-    fbc: req.cookies?._fbc,
+    fbp,
+    fbc,
+    eventSourceUrl,
   };
 
   try {
