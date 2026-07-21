@@ -76,7 +76,7 @@ function Hero() {
       <div className="container hero-grid">
         <div className="hero-copy">
           <span className="eyebrow">
-            <ShieldIcon /> Internet seguro para aprender · 6 a 13 años
+            <ShieldIcon /> Internet seguro · Niños de 6 a 13 años
           </span>
           <h1>
             Todo lo bueno de internet para que aprenda.{' '}

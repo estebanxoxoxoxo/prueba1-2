@@ -396,6 +396,7 @@ h1, h2, h3, h4 {
   height: 612px;
   display: flex;
   flex-direction: column;
+  text-align: left; /* la UI de la app siempre alineada a la izquierda */
 }
 .ph-status {
   display: flex;
@@ -552,16 +553,25 @@ h1, h2, h3, h4 {
 .vidrow-ch svg { width: 12px; height: 12px; color: var(--violet); }
 .vidrow-stats { font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 0px; line-height: 1.2;}
 
+/* En mobile el hero se apila en este orden:
+   eyebrow → título → subtexto → teléfono → botones → confianza.
+   'display: contents' saca a .hero-copy del flujo para poder intercalar
+   el teléfono entre el subtexto y los botones. Desktop queda igual. */
 @media (max-width: 940px) {
-  .hero-grid { grid-template-columns: 1fr; gap: 52px; text-align: center; }
-  .hero-sub { margin-left: auto; margin-right: auto; }
-  .hero-actions, .hero-trust { justify-content: center; }
-  .hero-visual { margin-top: 8px; }
-  .fb-a { left: 2%; }
-  .fb-b { right: 2%; }
-}
-@media (max-width: 600px) {
-  .float-badge { display: none; }
+  .hero-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    text-align: center;
+  }
+  .hero-copy { display: contents; }
+  .hero .eyebrow { order: 1; }
+  .hero h1 { order: 2; width: 100%; margin: 18px 0 16px; }
+  .hero-sub { order: 3; width: 100%; max-width: 520px; margin: 0 auto; }
+  .hero-visual { order: 4; margin: 28px 0 30px; }
+  .hero-actions { order: 5; justify-content: center; }
+  .hero-trust { order: 6; justify-content: center; margin-top: 26px; max-width: 480px; }
 }
 
 /* ============================================================
