@@ -79,10 +79,10 @@ function Hero() {
           <span className="eyebrow">
             <ShieldIcon /> <div style={{ display: 'flex', width: '100%', textAlign: 'center', flexDirection: 'column', justifyContent: 'center', gap: '0px' }}><div>Internet seguro</div> <div>Niños de 6 a 13 años</div>  </div>
           </span>
-          <h1>
-            Todo lo bueno de internet para que aprenda.{' '}
-            <span className="mark">Nada</span> de lo malo.
+          <h1 style={{ fontSize: '2.0rem', margin: '0', marginTop: '2rem' }}>
+            Máxima libertad para aprender.{' '}
           </h1>
+          <h1 style={{ fontSize: '2.0rem', margin: '0', marginTop: '0.5rem' }}>Máxima <span className="mark">tranquilidad</span> para vos.</h1>
           <p className="hero-sub">
             Cuando tu hijo busca un video, una imagen o un tema, Smarty rastrea
             internet, <b>analiza cada resultado</b> y solo le muestra lo
