@@ -45,6 +45,11 @@
   --sh-violet: 0 20px 44px rgba(109, 40, 217, 0.28);
   --sh-wa: 0 14px 30px rgba(37, 211, 102, 0.4);
 
+  /* ---- Color CTA (llamativo, no-WhatsApp) ---- */
+  --cta-1: #ff7a00;
+  --cta-2: #fb4b2a;
+  --sh-cta: 0 14px 30px rgba(251, 75, 42, 0.4);
+
   --maxw: 1160px;
   --sans: 'Nunito', system-ui, 'Segoe UI', Roboto, sans-serif;
 
@@ -147,20 +152,24 @@ h1, h2, h3, h4 {
   font-weight: 800;
   font-size: 16.5px;
   border: none;
-  border-radius: var(--r-pill);
+  border-radius: 14px;
   padding: 15px 26px;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
   white-space: nowrap;
 }
 .btn:active { transform: translateY(1px) scale(0.99); }
 .btn svg { width: 21px; height: 21px; }
 
-.btn-wa { background: #25d366; color: #fff; box-shadow: var(--sh-wa); }
+.btn-wa {
+  background: linear-gradient(135deg, var(--cta-1), var(--cta-2));
+  color: #fff;
+  box-shadow: var(--sh-cta);
+}
 .btn-wa:hover {
-  background: #20bd5b;
   transform: translateY(-2px);
-  box-shadow: 0 18px 36px rgba(37, 211, 102, 0.5);
+  filter: saturate(1.06) brightness(1.03);
+  box-shadow: 0 18px 38px rgba(251, 75, 42, 0.52);
 }
 
 .btn-ghost {
@@ -1001,7 +1010,7 @@ h1, h2, h3, h4 {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: #25d366;
+  background: linear-gradient(135deg, var(--cta-1), var(--cta-2));
   color: #fff;
   font-family: var(--sans);
   font-weight: 800;
@@ -1009,14 +1018,14 @@ h1, h2, h3, h4 {
   border: none;
   cursor: pointer;
   padding: 14px 20px 14px 16px;
-  border-radius: var(--r-pill);
-  box-shadow: var(--sh-wa);
+  border-radius: 16px;
+  box-shadow: var(--sh-cta);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   animation: pop-in 0.4s ease 0.6s both;
 }
 .wa-float:hover {
   transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 18px 38px rgba(37, 211, 102, 0.55);
+  box-shadow: 0 18px 38px rgba(251, 75, 42, 0.55);
 }
 .wa-float svg { width: 26px; height: 26px; }
 .wa-float .wa-pulse {
@@ -1024,13 +1033,13 @@ h1, h2, h3, h4 {
   left: 16px;
   width: 26px; height: 26px;
   border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6);
+  box-shadow: 0 0 0 0 rgba(251, 75, 42, 0.6);
   animation: pulse 2.2s infinite;
 }
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55); }
-  70% { box-shadow: 0 0 0 16px rgba(37, 211, 102, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(251, 75, 42, 0.55); }
+  70% { box-shadow: 0 0 0 16px rgba(251, 75, 42, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(251, 75, 42, 0); }
 }
 @keyframes pop-in {
   from { transform: scale(0.6); opacity: 0; }
