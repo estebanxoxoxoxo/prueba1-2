@@ -37,6 +37,18 @@ export default async function handler(req: any, res: any) {
     ],
   };
 
+  const log = {
+    eventId,
+    eventName,
+    eventTime: Date.now(),
+    ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress,
+    userAgent: req.headers["user-agent"],
+    userId: req.user?.id,          // si tienes login
+    email: req.user?.email,        // si la conoces
+    fbp: req.cookies?._fbp,
+    fbc: req.cookies?._fbc,
+  };
+
   try {
     const response = await fetch(
       `https://graph.facebook.com/v23.0/${pixelId}/events?access_token=${accessToken}`,

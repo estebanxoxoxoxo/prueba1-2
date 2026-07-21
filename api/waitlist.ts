@@ -23,17 +23,32 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const email =
-    typeof req.body?.email === "string" ? req.body.email.trim() : "";
+  // Acepta un contacto que puede ser email o número de WhatsApp.
+  // (Mantiene compatibilidad si llega como `email`.)
+  const raw =
+    typeof req.body?.contact === "string"
+      ? req.body.contact
+      : typeof req.body?.email === "string"
+        ? req.body.email
+        : "";
+  const contact = raw.trim();
 
-  if (!EMAIL_RE.test(email) || email.length > 200) {
+  if (!contact || contact.length > 200) {
+    return res.status(400).json({ error: "Contacto inválido" });
+  }
+
+  // Si tiene "@" es un email → se valida. Si no, es un número → no se valida.
+  const isEmail = contact.includes("@");
+  if (isEmail && !EMAIL_RE.test(contact)) {
     return res.status(400).json({ error: "Email inválido" });
   }
+  const type = isEmail ? "email" : "whatsapp";
 
   try {
     const db = getDb();
     await db.collection("waitlist").add({
-      email,
+      contact,
+      type,
       source: "landing",
       userAgent: String(req.headers["user-agent"] || ""),
       ip:
