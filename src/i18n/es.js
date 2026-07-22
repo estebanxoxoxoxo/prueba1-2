@@ -263,7 +263,7 @@ export default {
     images: {
       searchQuery: 'dinosaurios',
       reasons: { age: 'No apto', violent: 'Violento' },
-      reviewed: '9 revisadas',
+      reviewed: '6 revisadas',
       blocked: '2 bloqueadas',
     },
 

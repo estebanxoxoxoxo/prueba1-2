@@ -15,6 +15,12 @@ import {
   XIcon,
 } from './icons';
 import poster from '../assets/miniatura.jpg';
+import dino1 from '../assets/dino-1.jpg';
+import dino2 from '../assets/dino-2.jpg';
+import dino3 from '../assets/dino-3.jpg';
+import dino4 from '../assets/dino-4.jpg';
+import dino5 from '../assets/dino-5.jpg';
+import dino6 from '../assets/dino-6.jpg';
 import { useT } from '../i18n/core';
 
 /* ============================================================
@@ -32,20 +38,20 @@ const DESIGN_H = SCREEN_H + PHONE_PAD * 2; // 690
 
 // Línea de tiempo en segundos (loopea en TL.total).
 const TL = {
-  // Menú 1 → Chat
-  m1In: 0.2, m1Tap: 1.5, m1End: 2.5,
-  chatIn: 2.5, cType0: 3.3, cType1: 5.0, cSend: 5.2, cBotTyping: 5.5, cBotText: 6.0, cAgeChip: 6.8, chatEnd: 8.7,
+  // Menú 1 → Chat  (menú ~1.2s: la mitad, más dinámico)
+  m1In: 0.2, m1Tap: 0.8, m1End: 1.4,
+  chatIn: 1.4, cType0: 2.2, cType1: 3.9, cSend: 4.1, cBotTyping: 4.4, cBotText: 4.9, cAgeChip: 5.7, chatEnd: 7.5,
   // Menú 2 → Imágenes
-  m2In: 8.8, m2Tap: 10.1, m2End: 11.3,
-  imgIn: 11.3, imgScan: 12.1, imgBlock1: 12.9, imgBlock2: 13.8, imgCounter: 14.9, imgEnd: 17.2,
+  m2In: 7.6, m2Tap: 8.2, m2End: 8.8,
+  imgIn: 8.8, imgScan: 9.6, imgBlock1: 10.4, imgBlock2: 11.3, imgCounter: 12.4, imgEnd: 14.7,
   // Menú 3 → Contenidos
-  m3In: 17.3, m3Tap: 18.7, m3End: 19.9,
-  artIn: 19.9, artScan: 20.9, artBlock: 21.9, artCounter: 23.0, artEnd: 26.6,
+  m3In: 14.8, m3Tap: 15.4, m3End: 16.0,
+  artIn: 16.0, artScan: 17.0, artBlock: 18.0, artCounter: 19.1, artEnd: 22.6,
   // Menú 4 → Videos
-  m4In: 26.8, m4Tap: 28.1, m4End: 29.3,
-  vidIn: 29.3, vidScan: 30.3, vidBlock1: 31.1, vidBlock2: 32.0, vidBlock3: 32.9, vidCounter: 33.8,
-  tapVideo: 34.6, playerIn: 35.2, playStart: 36.0, vidEnd: 38.4,
-  total: 39.2,
+  m4In: 22.7, m4Tap: 23.3, m4End: 23.9,
+  vidIn: 23.9, vidScan: 24.9, vidBlock1: 25.7, vidBlock2: 26.6, vidBlock3: 27.5, vidCounter: 28.4,
+  tapVideo: 29.2, playerIn: 29.8, playStart: 30.6, vidEnd: 33.0,
+  total: 33.8,
 };
 
 const clampNum = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -169,7 +175,7 @@ function MenuScreen({ t, tr, from, to, tapAt, highlight }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 11, padding: '12px 16px 0', minHeight: 0 }}>
         {tr.phone.home.opts.map((o, i) => {
           const isHi = i === highlight;
-          const ap = easeOut(interp(t, [from + 0.05 + i * 0.06, from + 0.45 + i * 0.06], [0, 1]));
+          const ap = easeOut(interp(t, [from + i * 0.05, from + 0.32 + i * 0.05], [0, 1]));
           return (
             <div key={o.t} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 13, background: '#fff', border: '1.5px solid #e2ddf1', borderRadius: 20, padding: '13px 14px', boxShadow: 'var(--sh-sm)', opacity: ap, transform: `translateY(${(1 - ap) * 10}px) scale(${isHi ? press : 1})`, transformOrigin: 'center' }}>
               <span style={{ width: 52, height: 52, borderRadius: 15, flex: 'none', display: 'grid', placeItems: 'center', background: 'rgba(109,40,217,0.10)', color: 'var(--violet)' }}>{HOME_OPT_ICONS[i]}</span>
@@ -280,37 +286,36 @@ function ChatScreen({ t, tr }) {
    BUSCAR IMÁGENES — moderación + reflow (grilla 3×3)
    ============================================================ */
 const IMG_W = (SCREEN_W - 32 - 16) / 3; // 94
-const IMG_CFG = { top: 84, pad: 16, cols: 3, w: IMG_W, cw: IMG_W + 8, rh: IMG_W + 8 };
-const IMG_GRADS = [
-  'linear-gradient(135deg,#22c55e,#0d9488)', 'linear-gradient(135deg,#f59e0b,#f97316)', 'linear-gradient(135deg,#2f6bff,#22a6c9)',
-  'linear-gradient(135deg,#8b5cf6,#6d28d9)', 'linear-gradient(135deg,#ec4899,#db2777)', 'linear-gradient(135deg,#14b8a6,#0e7490)',
-  'linear-gradient(135deg,#84cc16,#4d7c0f)', 'linear-gradient(135deg,#38bdf8,#2563eb)', 'linear-gradient(135deg,#fb7185,#e11d48)',
-];
-const IMG_EMOJI = ['🦕', '🦖', '🦴', '🌋', '🥚', '🌿', '🐊', '🦎', '🌊'];
-const IMG_BLOCKS = [{ idx: 2, at: TL.imgBlock1, reason: 'age' }, { idx: 5, at: TL.imgBlock2, reason: 'violent' }];
+const IMG_CFG = { top: 96, pad: 16, cols: 3, w: IMG_W, cw: IMG_W + 8, rh: IMG_W + 8 };
+// 6 fotos reales de dinosaurios. Las 2 "intensas" (idx 1 y 4) se bloquean:
+// se muestran BLUREADAS (censuradas) → marca roja + motivo → se eliminan → reflow.
+const IMG_PHOTOS = [dino2, dino1, dino3, dino4, dino6, dino5];
+const IMG_BLOCKS = [{ idx: 1, at: TL.imgBlock1, reason: 'age' }, { idx: 4, at: TL.imgBlock2, reason: 'violent' }];
 
 function ImagesScreen({ t, tr }) {
   if (t < TL.imgIn - 0.1 || t > TL.imgEnd + 0.5) return null;
   const inn = easeOut(interp(t, [TL.imgIn, TL.imgIn + 0.45], [0, 1]));
   const out = interp(t, [TL.imgEnd, TL.imgEnd + 0.4], [1, 0]);
   const scanning = t >= TL.imgScan && t <= TL.imgBlock2 + 0.4;
-  const scanY = interp(t, [TL.imgScan, TL.imgBlock2 + 0.2], [IMG_CFG.top - 6, IMG_CFG.top + 3 * IMG_CFG.rh]);
+  const scanY = interp(t, [TL.imgScan, TL.imgBlock2 + 0.2], [IMG_CFG.top - 6, IMG_CFG.top + 2 * IMG_CFG.rh]);
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: '#f6f5fb', opacity: out, transform: `scale(${0.98 + 0.02 * inn})`, zIndex: 4 }}>
       <SearchBar query={tr.phone.images.searchQuery} icon={<ImageIcon style={{ width: 17, height: 17 }} />} back />
 
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        {IMG_GRADS.map((g, i) => {
+        {IMG_PHOTOS.map((src, i) => {
           const block = IMG_BLOCKS.find((b) => b.idx === i);
-          const ap = easeOut(interp(t, [TL.imgIn + 0.15 + i * 0.04, TL.imgIn + 0.55 + i * 0.04], [0, 1]));
+          const ap = easeOut(interp(t, [TL.imgIn + 0.15 + i * 0.05, TL.imgIn + 0.55 + i * 0.05], [0, 1]));
           const pos = block ? slotXY(i, IMG_CFG) : reflowXY(reflowSlot(i, t, IMG_BLOCKS), IMG_CFG);
           const blockOn = block ? interp(t, [block.at, block.at + 0.28], [0, 1]) : 0;
           const remove = block ? easeOut(interp(t, [block.at + 0.5, block.at + 0.9], [0, 1])) : 0;
-          const checkOn = block ? 0 : interp(t, [TL.imgScan + (i % 3) * 0.3 + 0.4, TL.imgScan + (i % 3) * 0.3 + 0.7], [0, 1]);
+          const row = Math.floor(i / 3);
+          const rowAt = TL.imgScan + row * 0.7 + 0.45;
+          const checkOn = block ? 0 : interp(t, [rowAt, rowAt + 0.3], [0, 1]);
           return (
-            <div key={i} style={{ position: 'absolute', left: pos.x, top: pos.y, width: IMG_CFG.w, height: IMG_CFG.w, borderRadius: 14, overflow: 'hidden', background: g, display: 'grid', placeItems: 'center', fontSize: 30, opacity: ap * (1 - remove), transform: `scale(${(0.8 + 0.2 * ap) * (1 - 0.15 * remove)})` }}>
-              <span aria-hidden="true" style={{ filter: block ? `blur(${3 * blockOn}px)` : 'none' }}>{IMG_EMOJI[i]}</span>
+            <div key={i} style={{ position: 'absolute', left: pos.x, top: pos.y, width: IMG_CFG.w, height: IMG_CFG.w, borderRadius: 14, overflow: 'hidden', background: '#e6e1f4', opacity: ap * (1 - remove), transform: `scale(${(0.85 + 0.15 * ap) * (1 - 0.15 * remove)})` }}>
+              <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: block ? 'blur(9px) saturate(0.9)' : 'none', transform: block ? 'scale(1.15)' : 'none' }} />
               {!block && (
                 <span style={{ position: 'absolute', left: 5, top: 5, width: 18, height: 18, borderRadius: '50%', background: 'var(--green)', border: '2px solid #fff', display: 'grid', placeItems: 'center', opacity: checkOn }}>
                   <CheckIcon style={{ width: 10, height: 10, color: '#fff' }} />
@@ -318,6 +323,7 @@ function ImagesScreen({ t, tr }) {
               )}
               {block && (
                 <>
+                  <span style={{ position: 'absolute', inset: 0, background: 'rgba(20,15,54,0.28)' }} />
                   <span style={{ position: 'absolute', inset: 0, background: 'rgba(220,38,38,0.42)', opacity: blockOn }} />
                   <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: blockOn }}>
                     <span style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(180,25,25,0.95)', border: '2px solid #fff', display: 'grid', placeItems: 'center' }}><XIcon style={{ width: 13, height: 13, color: '#fff' }} /></span>
@@ -544,17 +550,17 @@ function PlayerScreen({ t, tr }) {
 
 /* ---------- Subtítulo por escena (timings acá, texto en el diccionario) ---------- */
 const CAPTION_TIMES = [
-  { from: 0.3, to: 2.4, i: 0 },
-  { from: 2.6, to: 5.2, i: 1 },
-  { from: 5.3, to: 8.6, i: 2 },
-  { from: 8.8, to: 11.3, i: 3 },
-  { from: 11.4, to: 13.8, i: 4 },
-  { from: 13.8, to: 17.2, i: 5 },
-  { from: 17.3, to: 22.8, i: 6 },
-  { from: 22.8, to: 26.6, i: 7 },
-  { from: 26.8, to: 31.0, i: 8 },
-  { from: 31.0, to: 35.0, i: 9 },
-  { from: 35.0, to: TL.total, i: 10 },
+  { from: 0.3, to: 1.3, i: 0 },
+  { from: 1.5, to: 4.0, i: 1 },
+  { from: 4.0, to: 7.4, i: 2 },
+  { from: 7.6, to: 8.8, i: 3 },
+  { from: 8.9, to: 11.3, i: 4 },
+  { from: 11.3, to: 14.7, i: 5 },
+  { from: 14.8, to: 19.1, i: 6 },
+  { from: 19.1, to: 22.6, i: 7 },
+  { from: 22.7, to: 26.6, i: 8 },
+  { from: 26.6, to: 29.8, i: 9 },
+  { from: 29.8, to: TL.total, i: 10 },
 ];
 function Caption({ t }) {
   const tr = useT();
@@ -636,7 +642,7 @@ export default function PhoneDemo() {
   })();
   const frozen = forcedT != null || reduced;
   // Con reduced-motion: cuadro fijo en el reflow de imágenes (lo más demostrativo).
-  const [t, setT] = useState(forcedT != null ? forcedT : reduced ? 14.4 : 0);
+  const [t, setT] = useState(forcedT != null ? forcedT : reduced ? 12.8 : 0);
 
   useEffect(() => {
     const el = wrapRef.current;

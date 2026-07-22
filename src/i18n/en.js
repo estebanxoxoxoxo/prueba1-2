@@ -259,7 +259,7 @@ export default {
     images: {
       searchQuery: "dinosaurs",
       reasons: { age: "Not allowed", violent: "Violent" },
-      reviewed: "9 reviewed",
+      reviewed: "6 reviewed",
       blocked: "2 blocked",
     },
 
