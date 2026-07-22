@@ -1,5 +1,8 @@
+import { useT } from '../i18n/core';
+
 // Mascota Smarty — búho amigable (SVG puro, sin dependencias).
 export default function Owl({ className, style }) {
+  const t = useT();
   return (
     <svg
       className={className}
@@ -8,7 +11,7 @@ export default function Owl({ className, style }) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="Smarty, la mascota búho"
+      aria-label={t.brand.alt}
     >
       <defs>
         <radialGradient id="bodyGrad" cx="42%" cy="34%" r="75%">

@@ -16,10 +16,12 @@ import {
   BookmarkIcon,
   GearIcon,
 } from './icons';
+import { useT } from '../i18n/core';
 
 /* ============================================================
    Marco de teléfono reutilizable + pantallas reales de Smarty
    recreadas fielmente en CSS (sin dependencias de imágenes).
+   El texto viene del diccionario i18n; iconos/colores no.
    ============================================================ */
 
 export function PhoneFrame({ children, label }) {
@@ -37,19 +39,16 @@ export function PhoneFrame({ children, label }) {
   );
 }
 
-function BottomNav({ active = 'home' }) {
-  const items = [
-    { k: 'home', ico: <HomeIcon />, l: 'Inicio' },
-    { k: 'history', ico: <ClockIcon />, l: 'Historial' },
-    { k: 'saved', ico: <BookmarkIcon />, l: 'Guardados' },
-    { k: 'settings', ico: <GearIcon />, l: 'Ajustes' },
-  ];
+const NAV_ICONS = [<HomeIcon key="home" />, <ClockIcon key="clock" />, <BookmarkIcon key="bookmark" />, <GearIcon key="gear" />];
+
+function BottomNav({ active = 0 }) {
+  const t = useT();
   return (
     <nav className="sc-nav" aria-hidden="true">
-      {items.map((i) => (
-        <span key={i.k} className={i.k === active ? 'active' : ''}>
-          {i.ico}
-          <em>{i.l}</em>
+      {t.phone.nav.map((label, i) => (
+        <span key={label} className={i === active ? 'active' : ''}>
+          {NAV_ICONS[i]}
+          <em>{label}</em>
         </span>
       ))}
     </nav>
@@ -57,14 +56,11 @@ function BottomNav({ active = 'home' }) {
 }
 
 /* ---------- Pantalla 1: Inicio (4 opciones) → HERO ---------- */
-const homeOpts = [
-  { ico: <ChatIcon />, t: 'Chat', s: 'Habla de cualquier tema' },
-  { ico: <SearchIcon />, t: 'Buscar contenidos', s: 'Información de la web' },
-  { ico: <ImageIcon />, t: 'Buscar imágenes', s: 'Explora imágenes' },
-  { ico: <PlayIcon />, t: 'Buscar videos', s: 'Mira videos y aprende' },
-];
+const homeOptIcons = [<ChatIcon key="chat" />, <SearchIcon key="search" />, <ImageIcon key="image" />, <PlayIcon key="play" />];
 
 export function ScreenHome() {
+  const t = useT();
+  const home = t.screens.home;
   return (
     <div className="sc sc-home">
       <header className="home-head">
@@ -72,13 +68,13 @@ export function ScreenHome() {
         <span className="home-ava" aria-hidden="true" />
       </header>
       <div className="home-hi">
-        <h4>Hola, Alex <span aria-hidden="true">👋</span></h4>
-        <p>¿Qué quieres descubrir hoy?</p>
+        <h4>{home.greeting} <span aria-hidden="true">👋</span></h4>
+        <p>{home.prompt}</p>
       </div>
       <div className="home-opts">
-        {homeOpts.map((o) => (
+        {home.opts.map((o, i) => (
           <div className="opt" key={o.t}>
-            <span className="opt-ico">{o.ico}</span>
+            <span className="opt-ico">{homeOptIcons[i]}</span>
             <span className="opt-txt">
               <p style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{o.t}</p>
               <p>{o.s}</p>
@@ -87,20 +83,22 @@ export function ScreenHome() {
           </div>
         ))}
       </div>
-      <BottomNav active="home" />
+      <BottomNav active={0} />
     </div>
   );
 }
 
 /* ---------- Pantalla 2: Chat con Smarty ---------- */
 export function ScreenChat() {
+  const t = useT();
+  const chat = t.screens.chat;
   return (
     <div className="sc sc-chat">
       <header className="chat-head">
         <span className="sc-back"><ArrowLeftIcon /></span>
         <div className="chat-title">
-          <strong><SparkleIcon /> Chat con Smarty</strong>
-          <em><ShieldFilledIcon /> Conversación moderada</em>
+          <strong><SparkleIcon /> {chat.title}</strong>
+          <em><ShieldFilledIcon /> {chat.moderated}</em>
         </div>
         <span className="home-ava sm" aria-hidden="true" />
       </header>
@@ -108,7 +106,7 @@ export function ScreenChat() {
       <div className="chat-body">
         <div className="msg me">
           <div className="bubble">
-            ¿Qué es la fotosíntesis?
+            {chat.q1}
             <span className="bubble-time">9:41 ✓✓</span>
           </div>
         </div>
@@ -116,15 +114,15 @@ export function ScreenChat() {
         <div className="msg bot">
           <span className="msg-ava"><SparkleIcon /></span>
           <div className="bubble">
-            <p>¡Buena pregunta! 🌱 La fotosíntesis es el proceso que usan las plantas para producir su propio alimento.</p>
-            <p>Usan la luz del sol, agua y dióxido de carbono para crear glucosa y liberar oxígeno.</p>
+            <p>{chat.a1p1}</p>
+            <p>{chat.a1p2}</p>
             <div className="bubble-actions"><ThumbUpIcon /></div>
           </div>
         </div>
 
         <div className="msg me">
           <div className="bubble">
-            ¿Me recomiendas un video?
+            {chat.q2}
             <span className="bubble-time">9:42 ✓✓</span>
           </div>
         </div>
@@ -132,14 +130,14 @@ export function ScreenChat() {
         <div className="msg bot">
           <span className="msg-ava"><SparkleIcon /></span>
           <div className="bubble">
-            <p>¡Claro! Aquí tienes uno seguro y fácil de entender:</p>
+            <p>{chat.a2}</p>
             <div className="vidcard">
               <span className="vidcard-thumb" style={{ background: 'linear-gradient(135deg,#22c55e,#0d9488)' }}>
                 <PlayIcon />
               </span>
               <div className="vidcard-meta">
-                <p style={{ fontWeight: 'bold', fontSize: '0.65rem', lineHeight: '1.2' }}>La fotosíntesis explicada fácil</p>
-                <p style={{  fontSize: '0.5rem', lineHeight: '1.2', marginTop: '2px' }}>Smile and Learn <VerifiedIcon /></p>
+                <p style={{ fontWeight: 'bold', fontSize: '0.65rem', lineHeight: '1.2' }}>{chat.vidTitle}</p>
+                <p style={{  fontSize: '0.5rem', lineHeight: '1.2', marginTop: '2px' }}>{chat.vidChannel} <VerifiedIcon /></p>
               </div>
             </div>
           </div>
@@ -147,14 +145,15 @@ export function ScreenChat() {
       </div>
 
       <div className="chat-input">
-        <span>Escribe tu mensaje…</span>
-        <button type="button" aria-label="Enviar"><SendIcon /></button>
+        <span>{chat.inputPlaceholder}</span>
+        <button type="button" aria-label={t.a11y.send}><SendIcon /></button>
       </div>
     </div>
   );
 }
 
 /* ---------- Pantalla 3: Buscar videos ---------- */
+// Datos visuales (marca/colores/duración): NO se traducen.
 const channels = [
   { n: 'Smile and Learn', c: '#2f6bff' },
   { n: 'Kurzgesagt', c: '#0d9488' },
@@ -162,28 +161,30 @@ const channels = [
   { n: 'Academind', c: '#f59e0b' },
   { n: 'SciShow Kids', c: '#8b5cf6' },
 ];
-const vids = [
-  { t: '¿Qué hay dentro de la Tierra?', ch: 'Smile and Learn', v: '1.2 M · hace 2 meses', d: '6:42', g: 'linear-gradient(135deg,#f97316,#ef4444)' },
-  { t: 'El sistema solar para principiantes', ch: 'Smile and Learn', v: '895 K · hace 3 meses', d: '8:15', g: 'linear-gradient(135deg,#2f6bff,#22a6c9)' },
-  { t: '¿Qué es la materia? Explicado fácil', ch: 'Kurzgesagt', v: '7.8 M · hace 6 meses', d: '5:33', g: 'linear-gradient(135deg,#38bdf8,#2563eb)' },
+const vidMeta = [
+  { ch: 'Smile and Learn', d: '6:42', g: 'linear-gradient(135deg,#f97316,#ef4444)' },
+  { ch: 'Smile and Learn', d: '8:15', g: 'linear-gradient(135deg,#2f6bff,#22a6c9)' },
+  { ch: 'Kurzgesagt', d: '5:33', g: 'linear-gradient(135deg,#38bdf8,#2563eb)' },
 ];
 
 export function ScreenVideos() {
+  const t = useT();
+  const v = t.screens.videos;
   return (
     <div className="sc sc-videos">
       <header className="vid-head">
         <span className="sc-back"><ArrowLeftIcon /></span>
-        <h4>Buscar videos</h4>
+        <h4>{v.title}</h4>
       </header>
 
       <div className="vid-search">
         <SearchIcon />
-        <span>Buscar videos…</span>
+        <span>{v.searchPlaceholder}</span>
       </div>
 
       <div className="vid-sec">
-        <span>Canales favoritos</span>
-        <a>Ver todos</a>
+        <span>{v.favChannels}</span>
+        <a>{v.seeAll}</a>
       </div>
       <div className="chan-row">
         {channels.map((c) => (
@@ -197,24 +198,24 @@ export function ScreenVideos() {
         ))}
       </div>
 
-      <div className="vid-sec"><span>Recomendados para ti</span></div>
+      <div className="vid-sec"><span>{v.recommended}</span></div>
       <div className="vid-list">
-        {vids.map((v) => (
-          <div className="vidrow" key={v.t}>
-            <span className="vidrow-thumb" style={{ background: v.g }}>
+        {v.list.map((vid, i) => (
+          <div className="vidrow" key={vid.t}>
+            <span className="vidrow-thumb" style={{ background: vidMeta[i].g }}>
               <PlayIcon />
-              <em>{v.d}</em>
+              <em>{vidMeta[i].d}</em>
             </span>
             <div className="vidrow-meta">
-              <p style={{ fontWeight: 'bold', fontSize: '0.65rem', lineHeight: '1.2' }}>{v.t}</p>
-              <p className="vidrow-ch">{v.ch} <VerifiedIcon /></p>
-              <p className="vidrow-stats">{v.v}</p>
+              <p style={{ fontWeight: 'bold', fontSize: '0.65rem', lineHeight: '1.2' }}>{vid.t}</p>
+              <p className="vidrow-ch">{vidMeta[i].ch} <VerifiedIcon /></p>
+              <p className="vidrow-stats">{vid.v}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <BottomNav active="home" />
+      <BottomNav active={0} />
     </div>
   );
 }

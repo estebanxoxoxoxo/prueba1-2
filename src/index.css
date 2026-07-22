@@ -224,15 +224,50 @@ h1, h2, h3, h4 {
   transition: color 0.15s;
 }
 .nav-links a:hover { color: var(--violet); }
+.nav-cta { display: flex; align-items: center; gap: 14px; }
 .nav-cta .btn { padding: 11px 20px; font-size: 15px; }
+
+/* Switch de idioma ES / EN */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  background: #fff;
+  box-shadow: var(--sh-xs);
+  flex: none;
+}
+.lang-switch a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  padding: 5px 9px;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  border-radius: var(--r-pill);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.lang-switch a:hover { color: var(--violet); }
+.lang-switch a.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--violet), var(--violet-2));
+}
+
 @media (max-width: 860px) {
   .nav-links { display: none; }
 }
 @media (max-width: 480px) {
   .brand { font-size: 21px; }
   .brand .owl-badge { width: 36px; height: 36px; }
+  .nav-cta { gap: 9px; }
   .nav-cta .btn { padding: 10px 15px; font-size: 13.5px; }
   .nav-cta .btn svg { width: 18px; height: 18px; }
+  .lang-switch a { min-width: 28px; padding: 4px 7px; font-size: 11.5px; }
 }
 
 /* ============================================================

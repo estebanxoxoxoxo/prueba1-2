@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import Owl from './Owl';
+import { useT } from '../i18n/core';
 
 // Muestra la mascota real si existe /owl-mascot.png en /public;
 // si no, usa el búho SVG como respaldo (sin romper nada).
 export default function Mascot({ className, style }) {
+  const t = useT();
   const [failed, setFailed] = useState(false);
   if (failed) return <Owl className={className} style={style} />;
   return (
@@ -11,7 +13,7 @@ export default function Mascot({ className, style }) {
       className={className}
       style={{ objectFit: 'contain', ...style }}
       src="/owl-mascot.png"
-      alt="Smarty, la mascota búho"
+      alt={t.brand.alt}
       onError={() => setFailed(true)}
     />
   );

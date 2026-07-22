@@ -18,6 +18,7 @@ import {
   GearIcon,
 } from './icons';
 import poster from '../assets/miniatura.jpg';
+import { useT } from '../i18n/core';
 
 /* ============================================================
    Demo animada de la app (React + Motion) — versión liviana del
@@ -99,19 +100,15 @@ function TypingDots({ t }) {
   );
 }
 
-const NAV = [
-  { ico: <HomeIcon />, l: 'Inicio', active: true },
-  { ico: <ClockIcon />, l: 'Historial' },
-  { ico: <BookmarkIcon />, l: 'Guardados' },
-  { ico: <GearIcon />, l: 'Ajustes' },
-];
+const NAV_ICONS = [<HomeIcon key="home" />, <ClockIcon key="clock" />, <BookmarkIcon key="bookmark" />, <GearIcon key="gear" />];
 function BottomNav() {
+  const tr = useT();
   return (
     <nav style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '10px 14px 14px', background: '#fff', borderTop: '1px solid var(--line)' }}>
-      {NAV.map((i) => (
-        <span key={i.l} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, color: i.active ? 'var(--violet)' : '#b7b1d4' }}>
-          <span style={{ display: 'grid', placeItems: 'center', width: 22, height: 22 }}>{i.ico}</span>
-          <em style={{ fontStyle: 'normal', fontSize: 9, fontWeight: 800 }}>{i.l}</em>
+      {tr.phone.nav.map((label, i) => (
+        <span key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, color: i === 0 ? 'var(--violet)' : '#b7b1d4' }}>
+          <span style={{ display: 'grid', placeItems: 'center', width: 22, height: 22 }}>{NAV_ICONS[i]}</span>
+          <em style={{ fontStyle: 'normal', fontSize: 9, fontWeight: 800 }}>{label}</em>
         </span>
       ))}
     </nav>
@@ -119,14 +116,10 @@ function BottomNav() {
 }
 
 /* ---------- Home ---------- */
-const HOME_OPTS = [
-  { ico: <ChatIcon />, t: 'Chat', s: 'Habla con Smarty sobre cualquier tema' },
-  { ico: <SearchIcon />, t: 'Buscar contenidos', s: 'Encuentra información de la web' },
-  { ico: <ImageIcon />, t: 'Buscar imágenes', s: 'Explora y descubre imágenes increíbles' },
-  { ico: <PlayIcon />, t: 'Buscar videos', s: 'Encuentra y reproduce videos sobre lo que buscas' },
-];
+const HOME_OPT_ICONS = [<ChatIcon key="chat" />, <SearchIcon key="search" />, <ImageIcon key="image" />, <PlayIcon key="play" />];
 
 function HomeScreen({ t }) {
+  const tr = useT();
   const gone = interp(t, [TL.goChat, TL.chatDone], [0, 1]);
   const show = interp(t, [TL.tapChat - 0.33, TL.tapChat - 0.13], [0, 1]) * (1 - gone);
   const press = t < TL.tapChat + 0.17 ? interp(t, [TL.tapChat, TL.tapChat + 0.17], [1, 0.98]) : interp(t, [TL.tapChat + 0.17, TL.tapChat + 0.4], [0.98, 1]);
@@ -140,14 +133,14 @@ function HomeScreen({ t }) {
       </header>
 
       <div style={{ padding: '12px 20px 4px' }}>
-        <h4 style={{ fontSize: 26, fontWeight: 900, color: 'var(--ink)' }}>Hola, Alex <span aria-hidden="true">👋</span></h4>
-        <p style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 700, marginTop: 3 }}>¿Qué quieres descubrir hoy?</p>
+        <h4 style={{ fontSize: 26, fontWeight: 900, color: 'var(--ink)' }}>{tr.phone.home.greeting} <span aria-hidden="true">👋</span></h4>
+        <p style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 700, marginTop: 3 }}>{tr.phone.home.prompt}</p>
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 11, padding: '12px 16px 0', minHeight: 0 }}>
-        {HOME_OPTS.map((o, i) => (
+        {tr.phone.home.opts.map((o, i) => (
           <div key={o.t} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 13, background: '#fff', border: '1.5px solid #e2ddf1', borderRadius: 20, padding: '13px 14px', boxShadow: 'var(--sh-sm)' }}>
-            <span style={{ width: 52, height: 52, borderRadius: 15, flex: 'none', display: 'grid', placeItems: 'center', background: 'rgba(109,40,217,0.10)', color: 'var(--violet)' }}>{o.ico}</span>
+            <span style={{ width: 52, height: 52, borderRadius: 15, flex: 'none', display: 'grid', placeItems: 'center', background: 'rgba(109,40,217,0.10)', color: 'var(--violet)' }}>{HOME_OPT_ICONS[i]}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--ink)' }}>{o.t}</p>
               <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--muted)', marginTop: 3, lineHeight: 1.3 }}>{o.s}</p>
@@ -171,9 +164,9 @@ function HomeScreen({ t }) {
 }
 
 /* ---------- Chat ---------- */
-const QUERY = Array.from('¿Me buscás un video sobre dinosaurios? 🦕');
-
 function ChatScreen({ t }) {
+  const tr = useT();
+  const QUERY = Array.from(tr.phone.chat.query);
   if (t < TL.goChat - 0.1) return null;
   const inn = easeOut(interp(t, [TL.goChat, TL.chatDone], [0, 1]));
   const nChars = Math.round(interp(t, [TL.typeStart, TL.typeEnd], [0, QUERY.length]));
@@ -199,10 +192,10 @@ function ChatScreen({ t }) {
         </span>
         <div style={{ flex: 1, textAlign: 'center' }}>
           <strong style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 16, fontWeight: 900, color: 'var(--ink)' }}>
-            <SparkleIcon style={{ width: 17, height: 17, color: 'var(--violet)' }} /> Chat con Smarty
+            <SparkleIcon style={{ width: 17, height: 17, color: 'var(--violet)' }} /> {tr.phone.chat.title}
           </strong>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginTop: 2 }}>
-            <ShieldFilledIcon style={{ width: 12, height: 12, color: 'var(--muted)' }} /> Conversación moderada
+            <ShieldFilledIcon style={{ width: 12, height: 12, color: 'var(--muted)' }} /> {tr.phone.chat.moderated}
           </div>
         </div>
         <span style={{ width: 34, height: 34, borderRadius: '50%', flex: 'none', background: 'linear-gradient(135deg, var(--violet-2), var(--teal))', border: '2px solid #fff', boxShadow: 'var(--sh-xs)' }} />
@@ -212,7 +205,7 @@ function ChatScreen({ t }) {
         {showUser && (
           <div style={{ alignSelf: 'flex-end', maxWidth: '84%', opacity: userIn, transform: `translateY(${(1 - userIn) * 12}px)` }}>
             <div style={{ background: 'var(--violet)', color: '#fff', border: '1px solid var(--violet-ink)', borderRadius: 18, borderBottomRightRadius: 6, padding: '11px 14px', ...bubbleTextStyle }}>
-              ¿Me buscás un video sobre dinosaurios? 🦕
+              {tr.phone.chat.query}
               <span style={{ display: 'block', textAlign: 'right', fontSize: 10, fontWeight: 700, opacity: 0.9, marginTop: 4 }}>9:41 ✓✓</span>
             </div>
           </div>
@@ -229,7 +222,7 @@ function ChatScreen({ t }) {
           <div style={{ alignSelf: 'flex-start', display: 'flex', gap: 8, maxWidth: '90%', opacity: botIn, transform: `translateY(${(1 - botIn) * 12}px)` }}>
             <span style={{ width: 28, height: 28, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center', background: '#fff', color: 'var(--violet)', boxShadow: 'var(--sh-xs)' }}><SparkleIcon style={{ width: 15, height: 15 }} /></span>
             <div style={{ background: '#fff', border: '1px solid #e6e1f4', borderRadius: 18, borderBottomLeftRadius: 6, padding: '12px 14px', boxShadow: 'var(--sh-xs)' }}>
-              <p style={{ ...bubbleTextStyle, color: 'var(--ink)' }}>¡Genial! 🦖 Encontré uno buenísimo, seguro y ya aprobado para vos:</p>
+              <p style={{ ...bubbleTextStyle, color: 'var(--ink)' }}>{tr.phone.chat.botIntro}</p>
 
               {showCard && (
                 <div style={{ position: 'relative', display: 'flex', gap: 11, marginTop: 11, alignItems: 'center', opacity: cardIn, transform: `translateY(${(1 - cardIn) * 8}px)` }}>
@@ -241,9 +234,9 @@ function ChatScreen({ t }) {
                     <em style={{ position: 'absolute', right: 5, bottom: 5, fontStyle: 'normal', background: 'rgba(0,0,0,0.72)', color: '#fff', fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 5 }}>12:04</em>
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 12.5, fontWeight: 900, color: 'var(--ink)', lineHeight: 1.25 }}>El mundo de los dinosaurios</p>
+                    <p style={{ fontSize: 12.5, fontWeight: 900, color: 'var(--ink)', lineHeight: 1.25 }}>{tr.phone.chat.cardTitle}</p>
                     <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', marginTop: 4 }}>Veritasium <VerifiedIcon style={{ width: 12, height: 12, color: 'var(--violet)' }} /></p>
-                    <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', marginTop: 2 }}>1.4 M visualizaciones</p>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', marginTop: 2 }}>{tr.phone.chat.views}</p>
                   </div>
                   <TapPulse t={t} at={TL.tapCard} />
                 </div>
@@ -264,9 +257,9 @@ function ChatScreen({ t }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px 14px', background: '#fff', borderTop: '1px solid var(--line)' }}>
         <span style={{ flex: 1, background: '#f2eefc', borderRadius: 'var(--r-pill)', padding: '11px 16px', fontSize: 12.5, color: isTyping && typedText ? 'var(--ink)' : 'var(--muted)', fontWeight: 600 }}>
-          {isTyping && typedText ? typedText + caret : 'Escribe tu mensaje…'}
+          {isTyping && typedText ? typedText + caret : tr.phone.chat.inputPlaceholder}
         </span>
-        <button type="button" aria-label="Enviar" style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', flex: 'none', background: 'var(--violet)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+        <button type="button" aria-label={tr.a11y.send} style={{ width: 40, height: 40, borderRadius: '50%', border: 'none', flex: 'none', background: 'var(--violet)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
           <SendIcon style={{ width: 18, height: 18 }} />
         </button>
       </div>
@@ -276,6 +269,7 @@ function ChatScreen({ t }) {
 
 /* ---------- Player (póster real + reproducción simulada) ---------- */
 function PlayerScreen({ t }) {
+  const tr = useT();
   if (t < TL.playerIn - 0.1) return null;
   const inn = easeOut(interp(t, [TL.playerIn, TL.playerIn + 0.47], [0, 1]));
   const playing = t >= TL.playStart;
@@ -288,11 +282,11 @@ function PlayerScreen({ t }) {
     <div style={{ position: 'absolute', inset: 0, transform: `translateY(${(1 - inn) * 100}%)`, background: '#0b0a1f', display: 'flex', flexDirection: 'column', color: '#fff' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
         <span style={{ width: 32, height: 32, borderRadius: 11, display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,0.12)', color: '#fff' }}><ArrowLeftIcon style={{ width: 17, height: 17 }} /></span>
-        <strong style={{ fontSize: 13, fontWeight: 800 }}>Reproduciendo</strong>
+        <strong style={{ fontSize: 13, fontWeight: 800 }}>{tr.phone.player.playing}</strong>
       </div>
 
       <div style={{ position: 'relative', margin: '0 18px', borderRadius: 16, overflow: 'hidden', aspectRatio: '9 / 16', background: '#000' }}>
-        <img src={poster} alt="El mundo de los dinosaurios" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${zoom})` }} />
+        <img src={poster} alt={tr.phone.player.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${zoom})` }} />
 
         <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: playBtn }}>
           <div style={{ width: 62, height: 62, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center' }}>
@@ -301,9 +295,9 @@ function PlayerScreen({ t }) {
         </div>
 
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '40px 12px 10px', background: 'linear-gradient(transparent, rgba(0,0,0,0.72))' }}>
-          <div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.25 }}>El mundo de los dinosaurios</div>
+          <div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.25 }}>{tr.phone.player.title}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5, fontSize: 10.5, fontWeight: 700, opacity: 0.92 }}>
-            Veritasium <VerifiedIcon style={{ width: 12, height: 12, color: '#8b5cf6' }} /> · 1.4 M vistas
+            Veritasium <VerifiedIcon style={{ width: 12, height: 12, color: '#8b5cf6' }} /> · {tr.phone.player.metaViews}
           </div>
           <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.3)', marginTop: 9 }}>
             <div style={{ height: '100%', width: `${progress * 100}%`, background: '#ff2b53', borderRadius: 4 }} />
@@ -319,22 +313,25 @@ function PlayerScreen({ t }) {
 
       <div style={{ padding: '14px 18px', display: 'flex', justifyContent: 'center' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 999, background: 'rgba(34,197,94,0.16)', color: '#4ade80', fontSize: 12, fontWeight: 800 }}>
-          <ShieldFilledIcon style={{ width: 15, height: 15 }} /> Revisado y aprobado por Smarty
+          <ShieldFilledIcon style={{ width: 15, height: 15 }} /> {tr.phone.player.approved}
         </div>
       </div>
     </div>
   );
 }
 
-/* ---------- Subtítulo por escena ---------- */
-const CAPTIONS = [
-  { from: 0, to: TL.goChat + 0.27, text: 'Tu hijo entra al chat' },
-  { from: TL.goChat + 0.27, to: TL.botTyping, text: 'Pide lo que quiera aprender' },
-  { from: TL.botTyping, to: TL.playerIn, text: 'Smarty lo busca y lo modera' },
-  { from: TL.playerIn, to: TL.total, text: 'Solo contenido seguro y aprobado' },
+/* ---------- Subtítulo por escena (timings acá, texto en el diccionario) ---------- */
+const CAPTION_TIMES = [
+  { from: 0, to: TL.goChat + 0.27 },
+  { from: TL.goChat + 0.27, to: TL.botTyping },
+  { from: TL.botTyping, to: TL.playerIn },
+  { from: TL.playerIn, to: TL.total },
 ];
 function Caption({ t }) {
-  const cur = CAPTIONS.find((c) => t >= c.from && t < c.to) || CAPTIONS[CAPTIONS.length - 1];
+  const tr = useT();
+  const idx = CAPTION_TIMES.findIndex((c) => t >= c.from && t < c.to);
+  const i = idx === -1 ? CAPTION_TIMES.length - 1 : idx;
+  const cur = CAPTION_TIMES[i];
   const local = t - cur.from;
   const opIn = interp(local, [0, 0.33], [0, 1]);
   const opOut = cur.to < TL.total ? interp(t, [cur.to - 0.33, cur.to], [1, 0]) : 1;
@@ -342,7 +339,7 @@ function Caption({ t }) {
   return (
     <div style={{ marginTop: 18, minHeight: 40, display: 'flex', justifyContent: 'center' }}>
       <div style={{ opacity: Math.min(opIn, opOut), transform: `translateY(${up}px)`, background: 'var(--ink)', color: '#fff', padding: '10px 20px', borderRadius: 999, fontSize: 14.5, fontWeight: 800, boxShadow: 'var(--sh-md)' }}>
-        {cur.text}
+        {tr.phone.captions[i]}
       </div>
     </div>
   );

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { MailIcon, CheckIcon, XIcon } from './icons';
+import { useT } from '../i18n/core';
 
 // Contenido animado del modal de éxito. Se carga en un chunk aparte (lazy)
 // desde SuccessModal, así el runtime de `motion` no pesa en la carga inicial
 // de la landing —solo se baja cuando alguien completa el registro.
 export default function SuccessModalBody({ open, data, onClose }) {
+  const t = useT();
   const reduced = useReducedMotion();
   const okRef = useRef(null);
 
@@ -50,7 +52,9 @@ export default function SuccessModalBody({ open, data, onClose }) {
   }, [open]);
 
   const first = data.name ? data.name.trim().split(/\s+/)[0] : '';
-  const title = first ? `¡Listo, ${first}!` : '¡Ya estás en la lista!';
+  const title = first
+    ? `${t.success.titleNamedPre}${first}${t.success.titleNamedPost}`
+    : t.success.titleAnon;
 
   return (
     <AnimatePresence>
@@ -104,23 +108,20 @@ export default function SuccessModalBody({ open, data, onClose }) {
             </div>
 
             <span className="sm-eyebrow">
-              <CheckIcon /> Registro confirmado
+              <CheckIcon /> {t.success.eyebrow}
             </span>
             <h3 id="sm-title" className="sm-title">{title}</h3>
-            <p className="sm-text">
-              Apenas Smarty esté disponible, te vamos a enviar un mail para que
-              seas de los primeros en probarlo.
-            </p>
+            <p className="sm-text">{t.success.text}</p>
 
             <div className="sm-email">
               <MailIcon />
-              <span>{data.email || 'tu correo'}</span>
+              <span>{data.email || t.success.emailFallback}</span>
             </div>
 
             <button ref={okRef} type="button" className="sm-btn" onClick={onClose}>
-              Perfecto
+              {t.success.ok}
             </button>
-            <p className="sm-note">Revisá tu casilla (y el spam) cuando te escribamos.</p>
+            <p className="sm-note">{t.success.note}</p>
           </motion.div>
         </motion.div>
       )}

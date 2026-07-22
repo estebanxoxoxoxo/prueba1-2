@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { UserCheckIcon, CheckIcon } from './icons';
 import { registerWithGoogle, preloadGoogle, REGISTERED_EVENT } from '../registerWithGoogle';
+import { useT } from '../i18n/core';
 
 // Botón "Registrarse": abre el registro con Google (popup, con fallback a
 // redirect si el navegador bloquea el popup), verifica el token en el
 // servidor y guarda el usuario real en Firestore.
-export default function RegisterButton({ children = 'Registrarse', className = '', source = 'cta' }) {
+export default function RegisterButton({ children, className = '', source = 'cta' }) {
+  const t = useT();
   const [status, setStatus] = useState('idle'); // idle | loading | done
 
   // El registro puede completarse recién al volver de signInWithRedirect,
@@ -49,11 +51,11 @@ export default function RegisterButton({ children = 'Registrarse', className = '
       disabled={status !== 'idle'}
     >
       {status === 'done' ? (
-        <><CheckIcon /> ¡Registrado!</>
+        <><CheckIcon /> {t.register.done}</>
       ) : status === 'loading' ? (
-        'Abriendo Google…'
+        t.register.opening
       ) : (
-        <><UserCheckIcon /> {children}</>
+        <><UserCheckIcon /> {children || t.register.cta}</>
       )}
     </button>
   );
