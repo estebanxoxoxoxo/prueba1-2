@@ -18,7 +18,9 @@ function clean(v?: string) {
 // Sirve la config web de Firebase (valores PÚBLICOS: van al navegador).
 // Se leen de las env vars de Vercel para no hardcodearlas en el bundle.
 export default function handler(_req: any, res: any) {
-  res.setHeader("Cache-Control", "public, max-age=3600");
+  // Sin caché: la config es mínima y así evitamos servir valores viejos
+  // mientras se corrige/valida (un cache largo nos hizo servir una key rota).
+  res.setHeader("Cache-Control", "no-store");
   return res.status(200).json({
     apiKey: clean(process.env.apiKey),
     authDomain: clean(process.env.authDomain),
