@@ -26,7 +26,14 @@ async function verifyToken(idToken: string | undefined) {
   if (!idToken) return null;
   try {
     const { getAuth } = await import("firebase-admin/auth");
-    const decoded = await getAuth().verifyIdToken(idToken);
+    // Guard de tiempo: si verifyIdToken se cuelga (cold start / fetch de certs),
+    // no dejamos que la función muera por timeout — caemos al respaldo.
+    const decoded: any = await Promise.race([
+      getAuth().verifyIdToken(idToken),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("verify_timeout")), 4000)
+      ),
+    ]);
     return {
       uid: decoded.uid,
       email: decoded.email || null,
