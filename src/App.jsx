@@ -25,6 +25,7 @@ import {
 import { sendMetaEvent } from './metaEventSender';
 import { MetaEvent } from './metaEventsTypes';
 import { completeRedirectSignIn } from './registerWithGoogle';
+import SuccessModal from './components/SuccessModal';
 
 const NCES_URL = 'https://nces.ed.gov/programs/coe/indicator/tgk';
 
@@ -528,6 +529,7 @@ export default function App() {
         <FinalCTA />
       </main>
       <Footer />
+      <SuccessModal />
     </>
   );
 }

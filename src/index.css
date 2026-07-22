@@ -1174,3 +1174,215 @@ h1, h2, h3, h4 {
 @media (prefers-reduced-motion: reduce) {
   .wl-overlay, .wl-modal { animation: none; }
 }
+
+/* ============================================================
+   MODAL DE ÉXITO (post-registro con Google)
+   ============================================================ */
+.sm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 15, 54, 0.55);
+  backdrop-filter: saturate(140%) blur(8px);
+}
+.sm-card {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+  padding: 46px 32px 30px;
+  text-align: center;
+  overflow: hidden;
+}
+/* Wash de color suave detrás del badge */
+.sm-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 160px;
+  background: radial-gradient(120% 100% at 50% 0%,
+    rgba(139, 92, 246, 0.16),
+    rgba(20, 184, 166, 0.06) 55%,
+    transparent 76%);
+  pointer-events: none;
+}
+.sm-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(23, 18, 63, 0.05);
+  color: var(--ink-2);
+  cursor: pointer;
+  z-index: 5;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.sm-close:hover { background: rgba(23, 18, 63, 0.1); color: var(--ink); }
+.sm-close svg { width: 17px; height: 17px; }
+
+.sm-badge-wrap {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 20px;
+  display: grid;
+  place-items: center;
+}
+.sm-badge {
+  position: relative;
+  z-index: 2;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--violet-2), var(--teal-2));
+  box-shadow: var(--sh-violet);
+  animation: sm-float 3s ease-in-out infinite;
+}
+.sm-badge svg { width: 38px; height: 38px; }
+.sm-check {
+  position: absolute;
+  z-index: 3;
+  right: 3px;
+  bottom: 3px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--green);
+  border: 3px solid #fff;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--sh-xs);
+}
+.sm-check svg { width: 15px; height: 15px; }
+.sm-ring {
+  position: absolute;
+  inset: 4px;
+  z-index: 1;
+  border-radius: 50%;
+  border: 2px solid var(--violet-2);
+  opacity: 0;
+  animation: sm-ring 2.4s ease-out infinite;
+}
+.sm-ring-2 { animation-delay: 1.2s; border-color: var(--teal-2); }
+
+.sm-confetti {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+.sm-confetti i {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  display: block;
+}
+
+.sm-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--green);
+  background: var(--green-soft);
+  border: 1px solid rgba(22, 163, 74, 0.2);
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  margin-bottom: 14px;
+}
+.sm-eyebrow svg { width: 15px; height: 15px; }
+
+.sm-title {
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.sm-text {
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 330px;
+  margin: 0 auto 18px;
+}
+.sm-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--violet-ink);
+  background: var(--bg-soft);
+  border: 1px solid var(--line-2);
+  padding: 9px 15px;
+  border-radius: var(--r-pill);
+  margin-bottom: 24px;
+}
+.sm-email svg { width: 16px; height: 16px; color: var(--violet); flex: none; }
+.sm-email span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.sm-btn {
+  width: 100%;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 16px;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--violet), var(--violet-2));
+  box-shadow: var(--sh-violet);
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+.sm-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.sm-btn:active { transform: translateY(0); }
+.sm-note {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 14px;
+}
+
+@keyframes sm-ring {
+  0% { transform: scale(0.7); opacity: 0.5; }
+  100% { transform: scale(1.75); opacity: 0; }
+}
+@keyframes sm-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@media (max-width: 480px) {
+  .sm-card { padding: 42px 22px 26px; }
+  .sm-title { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sm-badge, .sm-ring { animation: none; }
+}
