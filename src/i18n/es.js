@@ -231,6 +231,9 @@ export default {
       'Reordena y solo deja lo bueno.',
       'Explora cualquier tema. Cada artículo, ya revisado.',
       'Todo el conocimiento, sin nada de lo malo.',
+      'Y busca videos de todo internet.',
+      'Analiza cada video y descarta lo que no va.',
+      'Solo lo bueno: revisado y listo para ver.',
     ],
 
     // Menú (pantalla de inicio)
@@ -277,6 +280,25 @@ export default {
         { title: 'Las estrellas y las galaxias', source: 'BBC Mundo' },
         { title: 'Viaje al centro del Sol', source: 'Kids Encyclopedia' },
       ],
+    },
+
+    // Buscar videos (moderación + reflow) → player
+    videos: {
+      searchQuery: 'dinosaurios 🦕',
+      reasons: { violent: 'Violento', clickbait: 'Clickbait', ads: 'Publicidad' },
+      reviewed: '24 revisados',
+      blocked: '3 bloqueados',
+      good: [
+        { title: 'El mundo de los dinosaurios', channel: 'Veritasium' },
+        { title: '¿Cómo vivían los dinosaurios?', channel: 'Smile and Learn' },
+        { title: 'Dinosaurios para chicos', channel: 'Kurzgesagt' },
+      ],
+    },
+    player: {
+      playing: 'Reproduciendo',
+      title: 'El mundo de los dinosaurios',
+      metaViews: '1.4 M vistas',
+      approved: 'Revisado y aprobado por Smarty',
     },
   },
 

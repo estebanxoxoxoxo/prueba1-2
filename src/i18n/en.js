@@ -227,6 +227,9 @@ export default {
       "It reshuffles and keeps only the good.",
       "Explore any topic. Every article, already reviewed.",
       "All the knowledge, with none of the bad.",
+      "And it searches videos from all over the internet.",
+      "It analyzes every video and drops what doesn't belong.",
+      "Only the good: reviewed and ready to watch.",
     ],
 
     // Menu (home screen)
@@ -273,6 +276,25 @@ export default {
         { title: "Stars and galaxies", source: "BBC" },
         { title: "A journey to the center of the Sun", source: "Kids Encyclopedia" },
       ],
+    },
+
+    // Search videos (moderation + reflow) → player
+    videos: {
+      searchQuery: "dinosaurs 🦕",
+      reasons: { violent: "Violent", clickbait: "Clickbait", ads: "Ad" },
+      reviewed: "24 reviewed",
+      blocked: "3 blocked",
+      good: [
+        { title: "The world of dinosaurs", channel: "Veritasium" },
+        { title: "How did dinosaurs live?", channel: "Smile and Learn" },
+        { title: "Dinosaurs for kids", channel: "Kurzgesagt" },
+      ],
+    },
+    player: {
+      playing: "Now playing",
+      title: "The world of dinosaurs",
+      metaViews: "1.4M views",
+      approved: "Reviewed and approved by Smarty",
     },
   },
 

@@ -14,6 +14,7 @@ import {
   CheckIcon,
   XIcon,
 } from './icons';
+import poster from '../assets/miniatura.jpg';
 import { useT } from '../i18n/core';
 
 /* ============================================================
@@ -39,8 +40,12 @@ const TL = {
   imgIn: 11.3, imgScan: 12.1, imgBlock1: 12.9, imgBlock2: 13.8, imgCounter: 14.9, imgEnd: 17.2,
   // Menú 3 → Contenidos
   m3In: 17.3, m3Tap: 18.7, m3End: 19.9,
-  artIn: 19.9, artScan: 20.9, artBlock: 21.9, artCounter: 23.0, artEnd: 27.2,
-  total: 28.0,
+  artIn: 19.9, artScan: 20.9, artBlock: 21.9, artCounter: 23.0, artEnd: 26.6,
+  // Menú 4 → Videos
+  m4In: 26.8, m4Tap: 28.1, m4End: 29.3,
+  vidIn: 29.3, vidScan: 30.3, vidBlock1: 31.1, vidBlock2: 32.0, vidBlock3: 32.9, vidCounter: 33.8,
+  tapVideo: 34.6, playerIn: 35.2, playStart: 36.0, vidEnd: 38.4,
+  total: 39.2,
 };
 
 const clampNum = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -61,11 +66,11 @@ function reflowSlot(i, t, blocks) {
   for (const b of blocks) if (b.idx < i) s -= shift(t, b.at);
   return s;
 }
-// (col,row) de un slot en grilla; interpola entre enteros para slots fraccionarios.
+// (col,row) de un slot en grilla; cw/rh = paso horizontal/vertical entre celdas.
 function slotXY(slot, cfg) {
   const col = ((slot % cfg.cols) + cfg.cols) % cfg.cols;
   const row = Math.floor(slot / cfg.cols);
-  return { x: cfg.pad + col * (cfg.w + cfg.gap), y: cfg.top + row * (cfg.w + cfg.gap) };
+  return { x: cfg.pad + col * cfg.cw, y: cfg.top + row * cfg.rh };
 }
 function reflowXY(s, cfg) {
   const s0 = Math.floor(s + 1e-6);
@@ -274,7 +279,8 @@ function ChatScreen({ t, tr }) {
 /* ============================================================
    BUSCAR IMÁGENES — moderación + reflow (grilla 3×3)
    ============================================================ */
-const IMG_CFG = { top: 84, pad: 16, gap: 8, w: (SCREEN_W - 32 - 16) / 3, cols: 3 }; // w=94
+const IMG_W = (SCREEN_W - 32 - 16) / 3; // 94
+const IMG_CFG = { top: 84, pad: 16, cols: 3, w: IMG_W, cw: IMG_W + 8, rh: IMG_W + 8 };
 const IMG_GRADS = [
   'linear-gradient(135deg,#22c55e,#0d9488)', 'linear-gradient(135deg,#f59e0b,#f97316)', 'linear-gradient(135deg,#2f6bff,#22a6c9)',
   'linear-gradient(135deg,#8b5cf6,#6d28d9)', 'linear-gradient(135deg,#ec4899,#db2777)', 'linear-gradient(135deg,#14b8a6,#0e7490)',
@@ -288,7 +294,7 @@ function ImagesScreen({ t, tr }) {
   const inn = easeOut(interp(t, [TL.imgIn, TL.imgIn + 0.45], [0, 1]));
   const out = interp(t, [TL.imgEnd, TL.imgEnd + 0.4], [1, 0]);
   const scanning = t >= TL.imgScan && t <= TL.imgBlock2 + 0.4;
-  const scanY = interp(t, [TL.imgScan, TL.imgBlock2 + 0.2], [IMG_CFG.top - 6, IMG_CFG.top + 3 * (IMG_CFG.w + IMG_CFG.gap)]);
+  const scanY = interp(t, [TL.imgScan, TL.imgBlock2 + 0.2], [IMG_CFG.top - 6, IMG_CFG.top + 3 * IMG_CFG.rh]);
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: '#f6f5fb', opacity: out, transform: `scale(${0.98 + 0.02 * inn})`, zIndex: 4 }}>
@@ -341,9 +347,9 @@ const ART_EMOJI = ['🪐', '🌟', '🌌', '🔭'];
 const ART_BLOCKS = [{ idx: 2, at: TL.artBlock }];
 // 5 slots: 0,1 = good0,good1 · 2 = bloqueado · 3,4 = good2,good3
 function ArticlesScreen({ t, tr }) {
-  if (t < TL.artIn - 0.1) return null;
+  if (t < TL.artIn - 0.1 || t > TL.artEnd + 0.5) return null;
   const inn = easeOut(interp(t, [TL.artIn, TL.artIn + 0.45], [0, 1]));
-  const out = interp(t, [TL.artEnd, TL.total], [1, 0]);
+  const out = interp(t, [TL.artEnd, TL.artEnd + 0.4], [1, 0]);
   const scanning = t >= TL.artScan && t <= TL.artBlock + 0.4;
   const scanY = interp(t, [TL.artScan, TL.artBlock + 0.2], [ART_TOP - 6, ART_TOP + 5 * ART_ROW_H]);
   const slots = [0, 1, 2, 3, 4];
@@ -404,6 +410,138 @@ function ArticlesScreen({ t, tr }) {
   );
 }
 
+/* ============================================================
+   BUSCAR VIDEOS — moderación + reflow (grilla 2 col) → player
+   ============================================================ */
+const VID_CARD_W = (SCREEN_W - 32 - 10) / 2; // 144
+const VID_CARD_H = 118;
+const VID_CFG = { top: 90, pad: 16, cols: 2, cw: VID_CARD_W + 10, rh: VID_CARD_H + 12 };
+const VID_GOOD_GRADS = ['linear-gradient(135deg,#f97316,#ef4444)', 'linear-gradient(135deg,#2f6bff,#22a6c9)', 'linear-gradient(135deg,#8b5cf6,#6d28d9)'];
+const VID_GOOD_DUR = ['5:12', '6:40', '4:28'];
+// slots 0,2,4 = buenos (gi 0,1,2) · 1,3,5 = bloqueados
+const VID_CARDS = [
+  { good: true, gi: 0 },
+  { good: false, reason: 'violent', at: TL.vidBlock1 },
+  { good: true, gi: 1 },
+  { good: false, reason: 'clickbait', at: TL.vidBlock2 },
+  { good: true, gi: 2 },
+  { good: false, reason: 'ads', at: TL.vidBlock3 },
+];
+const VID_BLOCKS = VID_CARDS.map((c, i) => (c.good ? null : { idx: i, at: c.at })).filter(Boolean);
+
+function VideoCard({ i, card, t, tr }) {
+  const pos = card.good ? reflowXY(reflowSlot(i, t, VID_BLOCKS), VID_CFG) : slotXY(i, VID_CFG);
+  const ap = easeOut(interp(t, [TL.vidIn + 0.15 + i * 0.06, TL.vidIn + 0.55 + i * 0.06], [0, 1]));
+  const remove = card.good ? 0 : easeOut(interp(t, [card.at + 0.5, card.at + 0.9], [0, 1]));
+  const blockOn = card.good ? 0 : interp(t, [card.at, card.at + 0.28], [0, 1]);
+  const rowAt = TL.vidScan + Math.floor(i / 2) * 0.6 + 0.4;
+  const checkOn = card.good ? interp(t, [rowAt, rowAt + 0.3], [0, 1]) : 0;
+
+  return (
+    <div style={{ position: 'absolute', left: pos.x, top: pos.y, width: VID_CARD_W, height: VID_CARD_H, opacity: ap * (1 - remove), transform: `scale(${1 - 0.12 * remove})`, transformOrigin: 'center' }}>
+      <div style={{ position: 'relative', width: '100%', height: 74, borderRadius: 12, overflow: 'hidden', background: card.good ? VID_GOOD_GRADS[card.gi] : 'linear-gradient(135deg,#c9d0dd,#9aa3b5)' }}>
+        {card.good ? (
+          <>
+            <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+              <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.42)', display: 'grid', placeItems: 'center' }}><PlayIcon style={{ width: 14, height: 14, color: '#fff' }} /></span>
+            </span>
+            <em style={{ position: 'absolute', right: 5, bottom: 5, fontStyle: 'normal', background: 'rgba(0,0,0,0.72)', color: '#fff', fontSize: 8.5, fontWeight: 800, padding: '1px 4px', borderRadius: 4 }}>{VID_GOOD_DUR[card.gi]}</em>
+            <span style={{ position: 'absolute', left: 5, top: 5, width: 20, height: 20, borderRadius: '50%', background: 'var(--green)', border: '2px solid #fff', display: 'grid', placeItems: 'center', opacity: checkOn, transform: `scale(${0.6 + 0.4 * checkOn})` }}>
+              <CheckIcon style={{ width: 11, height: 11, color: '#fff' }} />
+            </span>
+          </>
+        ) : (
+          <>
+            <span style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(3px)', background: 'rgba(255,255,255,0.06)' }} />
+            <span style={{ position: 'absolute', inset: 0, background: 'rgba(220,38,38,0.34)', opacity: blockOn }} />
+            <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: blockOn }}>
+              <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(180,25,25,0.92)', display: 'grid', placeItems: 'center', border: '2px solid #fff' }}><XIcon style={{ width: 15, height: 15, color: '#fff' }} /></span>
+            </span>
+            <span style={{ position: 'absolute', left: '50%', bottom: 6, transform: 'translateX(-50%)', whiteSpace: 'nowrap', background: '#b4191a', color: '#fff', fontSize: 9.5, fontWeight: 800, padding: '2px 7px', borderRadius: 'var(--r-pill)', opacity: blockOn }}>
+              {tr.phone.videos.reasons[card.reason]}
+            </span>
+          </>
+        )}
+      </div>
+      {card.good ? (
+        <div style={{ padding: '6px 2px 0' }}>
+          <p style={{ fontSize: 10.5, fontWeight: 900, color: 'var(--ink)', lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{tr.phone.videos.good[card.gi].title}</p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: 'var(--muted)', marginTop: 3 }}>{tr.phone.videos.good[card.gi].channel} <VerifiedIcon style={{ width: 10, height: 10, color: 'var(--violet)' }} /></p>
+        </div>
+      ) : (
+        <div style={{ padding: '6px 2px 0' }}>
+          <span style={{ display: 'inline-block', width: '70%', height: 8, borderRadius: 4, background: '#e4e0f4' }} />
+          <span style={{ display: 'block', width: '45%', height: 7, borderRadius: 4, background: '#eee9f7', marginTop: 5 }} />
+        </div>
+      )}
+      {i === 0 && <TapPulse t={t} at={TL.tapVideo} />}
+    </div>
+  );
+}
+
+function VideoSearchScreen({ t, tr }) {
+  if (t < TL.vidIn - 0.1 || t > TL.playerIn + 0.5) return null;
+  const inn = easeOut(interp(t, [TL.vidIn, TL.vidIn + 0.45], [0, 1]));
+  const out = interp(t, [TL.playerIn, TL.playerIn + 0.4], [1, 0]);
+  const scanning = t >= TL.vidScan && t <= TL.vidBlock3 + 0.4;
+  const scanY = interp(t, [TL.vidScan, TL.vidBlock3 + 0.2], [VID_CFG.top - 6, VID_CFG.top + 3 * VID_CFG.rh]);
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, background: '#f6f5fb', opacity: Math.min(inn, out), transform: `translateX(${30 * (1 - inn)}px)`, zIndex: 6 }}>
+      <SearchBar query={tr.phone.videos.searchQuery} icon={<PlayIcon style={{ width: 17, height: 17 }} />} back />
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        {VID_CARDS.map((c, i) => <VideoCard key={i} i={i} card={c} t={t} tr={tr} />)}
+        {scanning && (
+          <div style={{ position: 'absolute', left: 12, right: 12, top: scanY, height: 3, borderRadius: 3, background: 'linear-gradient(90deg,transparent,var(--violet),transparent)', boxShadow: '0 0 14px 2px rgba(109,40,217,0.55)' }} />
+        )}
+        <ModPills t={t} at={TL.vidCounter} reviewed={tr.phone.videos.reviewed} blocked={tr.phone.videos.blocked} />
+      </div>
+    </div>
+  );
+}
+
+function PlayerScreen({ t, tr }) {
+  if (t < TL.playerIn - 0.1) return null;
+  const inn = easeOut(interp(t, [TL.playerIn, TL.playerIn + 0.47], [0, 1]));
+  const out = interp(t, [TL.vidEnd, TL.total], [1, 0]);
+  const playing = t >= TL.playStart;
+  const zoom = playing ? interp(t, [TL.playStart, TL.vidEnd], [1, 1.08]) : 1;
+  const progress = interp(t, [TL.playStart, TL.vidEnd], [0, 0.14]);
+  const cur = Math.floor(interp(t, [TL.playStart, TL.vidEnd], [0, 8]));
+
+  return (
+    <div style={{ position: 'absolute', inset: 0, transform: `translateY(${(1 - inn) * 100}%)`, background: '#0b0a1f', display: 'flex', flexDirection: 'column', color: '#fff', opacity: out, zIndex: 7 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
+        <span style={{ width: 32, height: 32, borderRadius: 11, display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,0.12)', color: '#fff' }}><ArrowLeftIcon style={{ width: 17, height: 17 }} /></span>
+        <strong style={{ fontSize: 13, fontWeight: 800 }}>{tr.phone.player.playing}</strong>
+      </div>
+
+      <div style={{ position: 'relative', margin: '0 18px', borderRadius: 16, overflow: 'hidden', aspectRatio: '9 / 16', background: '#000' }}>
+        <img src={poster} alt={tr.phone.player.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${zoom})` }} />
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '40px 12px 10px', background: 'linear-gradient(transparent, rgba(0,0,0,0.72))' }}>
+          <div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.25 }}>{tr.phone.player.title}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5, fontSize: 10.5, fontWeight: 700, opacity: 0.92 }}>
+            Veritasium <VerifiedIcon style={{ width: 12, height: 12, color: '#8b5cf6' }} /> · {tr.phone.player.metaViews}
+          </div>
+          <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.3)', marginTop: 9 }}>
+            <div style={{ height: '100%', width: `${progress * 100}%`, background: '#ff2b53', borderRadius: 4 }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, fontWeight: 700, marginTop: 4, opacity: 0.9 }}>
+            <span>{`0:${String(playing ? cur : 0).padStart(2, '0')}`}</span>
+            <span>0:52</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: '14px 18px', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 999, background: 'rgba(34,197,94,0.16)', color: '#4ade80', fontSize: 12, fontWeight: 800 }}>
+          <ShieldFilledIcon style={{ width: 15, height: 15 }} /> {tr.phone.player.approved}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------- Subtítulo por escena (timings acá, texto en el diccionario) ---------- */
 const CAPTION_TIMES = [
   { from: 0.3, to: 2.4, i: 0 },
@@ -413,7 +551,10 @@ const CAPTION_TIMES = [
   { from: 11.4, to: 13.8, i: 4 },
   { from: 13.8, to: 17.2, i: 5 },
   { from: 17.3, to: 22.8, i: 6 },
-  { from: 22.8, to: TL.total, i: 7 },
+  { from: 22.8, to: 26.6, i: 7 },
+  { from: 26.8, to: 31.0, i: 8 },
+  { from: 31.0, to: 35.0, i: 9 },
+  { from: 35.0, to: TL.total, i: 10 },
 ];
 function Caption({ t }) {
   const tr = useT();
@@ -437,12 +578,12 @@ function Caption({ t }) {
   );
 }
 
-/* ---------- Puntos de capítulo (3 features) ---------- */
+/* ---------- Puntos de capítulo (4 features) ---------- */
 function ChapterDots({ t }) {
-  const active = t < TL.m2In ? 0 : t < TL.m3In ? 1 : 2;
+  const active = t < TL.m2In ? 0 : t < TL.m3In ? 1 : t < TL.m4In ? 2 : 3;
   return (
     <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 14 }}>
-      {[0, 1, 2].map((i) => (
+      {[0, 1, 2, 3].map((i) => (
         <span key={i} style={{ width: i === active ? 20 : 6, height: 6, borderRadius: 3, background: i === active ? 'var(--violet)' : '#d5cfe9', transition: 'width 0.3s ease, background 0.3s ease' }} />
       ))}
     </div>
@@ -468,6 +609,9 @@ function Phone({ t, tr }) {
           <ImagesScreen t={t} tr={tr} />
           <MenuScreen t={t} tr={tr} from={TL.m3In} to={TL.m3End} tapAt={TL.m3Tap} highlight={1} />
           <ArticlesScreen t={t} tr={tr} />
+          <MenuScreen t={t} tr={tr} from={TL.m4In} to={TL.m4End} tapAt={TL.m4Tap} highlight={3} />
+          <VideoSearchScreen t={t} tr={tr} />
+          <PlayerScreen t={t} tr={tr} />
         </div>
       </div>
     </div>
