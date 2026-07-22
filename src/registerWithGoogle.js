@@ -89,15 +89,23 @@ async function finishSignIn(user, source) {
     /* noop */
   }
 
-  // Persistencia en el server (best-effort). El servidor verifica el token con
-  // el Admin SDK y guarda el lead real. Si falla, lo dejamos en failedLeads con
-  // el email + el status HTTP para poder recuperar el lead y diagnosticar.
+  // Persistencia en el server. El servidor intenta verificar el token con el
+  // Admin SDK; si esa verificación falla, igual guarda el lead con estos datos
+  // (el usuario ya está autenticado por Google acá). Solo cae a failedLeads si
+  // el server realmente se cae (500) al escribir en la DB.
   try {
     const idToken = await user.getIdToken();
     const reg = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken, source }),
+      body: JSON.stringify({
+        idToken,
+        source,
+        uid: user.uid,
+        email: user.email,
+        name: user.displayName,
+        picture: user.photoURL,
+      }),
     });
     if (!reg.ok) {
       const detail = await reg.text().catch(() => '');
