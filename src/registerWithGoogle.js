@@ -38,7 +38,17 @@ export async function registerWithGoogle(source = 'cta') {
   provider.setCustomParameters({ prompt: 'select_account' });
 
   // Abre el popup de Google (lanza si el usuario lo cierra/cancela).
-  const result = await signInWithPopup(auth, provider);
+  let result;
+  try {
+    result = await signInWithPopup(auth, provider);
+  } catch (err) {
+    // Deja el código real visible para diagnosticar (auth/unauthorized-domain,
+    // auth/popup-closed-by-user, etc.). Mirá la consola del navegador.
+    // eslint-disable-next-line no-console
+    console.error('[Registro Google] signInWithPopup falló →', err?.code, '—', err?.message);
+    if (typeof window !== 'undefined') window.__googleAuthError = err;
+    throw err;
+  }
   const user = result.user;
   const idToken = await user.getIdToken();
 
