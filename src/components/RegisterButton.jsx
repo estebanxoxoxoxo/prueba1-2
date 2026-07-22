@@ -1,21 +1,27 @@
 import { useState } from 'react';
 import { UserCheckIcon, CheckIcon } from './icons';
-import { registerLead } from '../registerLead';
+import { registerWithGoogle, preloadGoogle } from '../registerWithGoogle';
 
-// Botón "Registrarse": guarda un lead directo (sin popup) y dispara la
-// conversión Lead de Meta. Muestra confirmación en el propio botón.
+// Botón "Registrarse": abre el registro con Google (popup), verifica el token
+// en el servidor y guarda el usuario real en Firestore. Sin popup propio.
 export default function RegisterButton({ children = 'Registrarse', className = '', source = 'cta' }) {
   const [status, setStatus] = useState('idle'); // idle | loading | done
+
+  // Precarga Firebase al mostrar intención → el popup abre sin trabas.
+  const onIntent = () => {
+    preloadGoogle().catch(() => {});
+  };
 
   const onClick = async () => {
     if (status !== 'idle') return;
     setStatus('loading');
     try {
-      await registerLead(source);
+      await registerWithGoogle(source);
+      setStatus('done');
     } catch {
-      /* noop: no bloqueamos la confirmación */
+      // Popup cerrado/cancelado o error → volver a permitir el intento.
+      setStatus('idle');
     }
-    setStatus('done');
   };
 
   return (
@@ -23,12 +29,15 @@ export default function RegisterButton({ children = 'Registrarse', className = '
       type="button"
       className={`btn btn-wa ${className}`}
       onClick={onClick}
+      onMouseEnter={onIntent}
+      onFocus={onIntent}
+      onPointerDown={onIntent}
       disabled={status !== 'idle'}
     >
       {status === 'done' ? (
         <><CheckIcon /> ¡Registrado!</>
       ) : status === 'loading' ? (
-        'Enviando…'
+        'Abriendo Google…'
       ) : (
         <><UserCheckIcon /> {children}</>
       )}

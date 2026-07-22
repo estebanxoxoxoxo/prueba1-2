@@ -1,4 +1,5 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 
 export const config = {
@@ -6,14 +7,13 @@ export const config = {
 };
 
 // Inicializa Firebase Admin una sola vez y reusa la instancia.
-function getDb() {
+function initAdmin() {
   if (!getApps().length) {
     const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT no está configurada");
     initializeApp({ credential: cert(JSON.parse(raw)) });
     getFirestore().settings({ ignoreUndefinedProperties: true });
   }
-  return getFirestore();
 }
 
 export default async function handler(req: any, res: any) {
@@ -21,32 +21,41 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const { idToken, source } = req.body || {};
+  if (!idToken) {
+    return res.status(400).json({ error: "idToken requerido" });
+  }
+
   try {
-    const source =
-      typeof req.body?.source === "string" ? req.body.source : "unknown";
+    initAdmin();
+
+    // Verifica el token de Google/Firebase (no confiamos en el cliente).
+    const decoded = await getAuth().verifyIdToken(idToken);
 
     const lead = {
-      source, // qué botón: navbar | hero | final-cta
+      uid: decoded.uid,
+      email: decoded.email || null,
+      emailVerified: decoded.email_verified || false,
+      name: decoded.name || null,
+      picture: decoded.picture || null,
+      provider: "google",
+      source: typeof source === "string" ? source : "unknown",
       ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress,
-      userAgent: req.headers["user-agent"],
-      // Geolocalización por IP (headers que agrega Vercel en producción).
-      country: req.headers["x-vercel-ip-country"] || null, // ISO 2 letras: AR, CL, CO…
+      country: req.headers["x-vercel-ip-country"] || null,
       region: req.headers["x-vercel-ip-country-region"] || null,
       city: req.headers["x-vercel-ip-city"]
         ? decodeURIComponent(String(req.headers["x-vercel-ip-city"]))
         : null,
-      timezone: req.headers["x-vercel-ip-timezone"] || null,
-      // Identificadores de Meta (para cruzar con el evento Lead).
       fbp: req.cookies?._fbp || null,
       fbc: req.cookies?._fbc || null,
-      referer: req.headers?.referer || null,
       createdAt: FieldValue.serverTimestamp(),
     };
 
-    await getDb().collection("leads").add(lead);
+    // Upsert por uid → no duplica si el mismo usuario se registra otra vez.
+    await getFirestore().collection("leads").doc(decoded.uid).set(lead, { merge: true });
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, email: lead.email });
   } catch (err: any) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(401).json({ success: false, error: err.message });
   }
 }
