@@ -18,6 +18,22 @@ const POPUP_FALLBACK_CODES = new Set([
   'auth/operation-not-supported-in-this-environment',
 ]);
 
+// Log a `failedLeads` cuando el usuario tocó "Registrarse" pero NO terminó el
+// proceso (cerró/canceló el popup, verificación fallida, etc.). Fire-and-forget.
+function logFailedLead(source, err) {
+  if (typeof fetch !== 'function') return;
+  fetch('/api/failed-lead', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      source,
+      reason: err?.code || 'unknown',
+      message: err?.message || null,
+      email: err?.email || null,
+    }),
+  }).catch(() => {});
+}
+
 export function preloadGoogle() {
   if (!googleReady) {
     googleReady = (async () => {
@@ -52,11 +68,19 @@ async function finishSignIn(user, source) {
   const idToken = await user.getIdToken();
 
   // El servidor verifica el token con el Admin SDK y guarda el lead real.
-  await fetch('/api/register', {
+  const reg = await fetch('/api/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ idToken, source }),
   });
+  if (!reg.ok) {
+    // La verificación/guardado falló → tratamos el proceso como NO completado
+    // para que quede registrado en failedLeads (con el email, que sí tenemos).
+    const e = new Error('register_failed');
+    e.code = 'register/verify-failed';
+    e.email = user.email || null;
+    throw e;
+  }
 
   // Conversión Lead con email real (se hashea en el servidor → mejor matching).
   try {
@@ -109,9 +133,18 @@ export async function registerWithGoogle(source = 'cta') {
       await signInWithRedirect(auth, provider);
       return null; // la página está navegando a Google, no hay más que hacer acá
     }
+    // Popup cerrado/cancelado, dominio no autorizado, etc. → no completó.
+    logFailedLead(source, err);
     throw err;
   }
-  return finishSignIn(result.user, source);
+
+  try {
+    return await finishSignIn(result.user, source);
+  } catch (err) {
+    // Autenticó con Google pero falló la verificación/guardado del lead.
+    logFailedLead(source, err);
+    throw err;
+  }
 }
 
 // Se llama una vez al cargar la app para completar el registro si venimos de
@@ -143,5 +176,10 @@ export async function completeRedirectSignIn() {
   if (typeof window !== 'undefined' && window.sessionStorage) {
     window.sessionStorage.removeItem(REDIRECT_SOURCE_KEY);
   }
-  return finishSignIn(result.user, source);
+  try {
+    return await finishSignIn(result.user, source);
+  } catch (err) {
+    logFailedLead(source, err);
+    return null;
+  }
 }

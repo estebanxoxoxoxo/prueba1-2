@@ -24,23 +24,16 @@ export default function RegisterButton({ children = 'Registrarse', className = '
   const onClick = async () => {
     if (status !== 'idle') return;
 
-    // LO PRIMERO al hacer click: mandar el lead a la DB. Fire-and-forget: no
-    // esperamos la respuesta ni dependemos de Google, así queda registrado
-    // aunque el popup falle o se cancele.
-    fetch('/api/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source }),
-    }).catch(() => {});
-
     setStatus('loading');
     try {
+      // Éxito → el lead viaja a `leads` con la info de Google (vía /api/register).
       const result = await registerWithGoogle(source);
       // Si result es null, estamos siendo redirigidos a Google: la página
       // está navegando, así que se queda en "loading" hasta que se vaya.
       if (result) setStatus('done');
     } catch {
-      // Popup cerrado/cancelado o error → volver a permitir el intento.
+      // No terminó el proceso → registerWithGoogle ya logueó a failedLeads.
+      // Acá solo habilitamos otro intento.
       setStatus('idle');
     }
   };
