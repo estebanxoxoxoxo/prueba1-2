@@ -41,18 +41,18 @@ const DESIGN_H = SCREEN_H + PHONE_PAD * 2; // 690
 const TL = {
   // Menú 1 → Chat  (menú ~1.2s: la mitad, más dinámico)
   m1In: 0.2, m1Tap: 0.8, m1End: 1.4,
-  chatIn: 1.4, cType0: 2.2, cType1: 3.9, cSend: 4.1, cBotTyping: 4.4, cBotText: 4.9, cAgeChip: 5.7, chatEnd: 6.6,
+  chatIn: 1.4, cType0: 1.8, cType1: 2.7, cSend: 2.9, cBotTyping: 3.2, cBotText: 3.7, cAgeChip: 4.5, chatEnd: 5.4,
   // Menú 2 → Imágenes
-  m2In: 6.7, m2Tap: 7.3, m2End: 7.9,
-  imgIn: 7.9, imgScan: 8.7, imgBlock1: 9.5, imgBlock2: 10.4, imgCounter: 11.5, imgEnd: 12.4,
+  m2In: 5.5, m2Tap: 6.1, m2End: 6.7,
+  imgIn: 6.7, imgScan: 7.5, imgBlock1: 8.3, imgBlock2: 9.2, imgCounter: 10.3, imgEnd: 11.2,
   // Menú 3 → Contenidos
-  m3In: 12.5, m3Tap: 13.1, m3End: 13.7,
-  artIn: 13.7, artScan: 14.7, artBlock: 15.7, artCounter: 16.8, artEnd: 17.7,
+  m3In: 11.3, m3Tap: 11.9, m3End: 12.5,
+  artIn: 12.5, artScan: 13.5, artBlock: 14.5, artCounter: 15.6, artEnd: 16.5,
   // Menú 4 → Videos
-  m4In: 17.8, m4Tap: 18.4, m4End: 19.0,
-  vidIn: 19.0, vidScan: 20.0, vidBlock1: 20.8, vidBlock2: 21.7, vidBlock3: 22.6, vidCounter: 23.5,
-  tapVideo: 24.3, playerIn: 24.9, playStart: 25.7, vidEnd: 27.2,
-  total: 27.8,
+  m4In: 16.6, m4Tap: 17.2, m4End: 17.8,
+  vidIn: 17.8, vidScan: 18.8, vidBlock1: 19.6, vidBlock2: 20.5, vidBlock3: 21.4, vidCounter: 22.3,
+  tapVideo: 23.1, playerIn: 23.7, playStart: 24.5, vidEnd: 26.0,
+  total: 26.6,
 };
 
 const clampNum = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -552,16 +552,16 @@ function PlayerScreen({ t, tr }) {
 /* ---------- Subtítulo por escena (timings acá, texto en el diccionario) ---------- */
 const CAPTION_TIMES = [
   { from: 0.3, to: 1.35, i: 0 },
-  { from: 1.5, to: 4.0, i: 1 },
-  { from: 4.0, to: 6.5, i: 2 },
-  { from: 6.7, to: 7.9, i: 3 },
-  { from: 8.0, to: 10.4, i: 4 },
-  { from: 10.4, to: 12.4, i: 5 },
-  { from: 12.5, to: 16.8, i: 6 },
-  { from: 16.8, to: 17.7, i: 7 },
-  { from: 17.8, to: 22.6, i: 8 },
-  { from: 22.6, to: 24.9, i: 9 },
-  { from: 24.9, to: TL.total, i: 10 },
+  { from: 1.5, to: 2.9, i: 1 },
+  { from: 2.9, to: 5.3, i: 2 },
+  { from: 5.5, to: 6.7, i: 3 },
+  { from: 6.8, to: 9.2, i: 4 },
+  { from: 9.2, to: 11.2, i: 5 },
+  { from: 11.3, to: 15.6, i: 6 },
+  { from: 15.6, to: 16.5, i: 7 },
+  { from: 16.6, to: 21.4, i: 8 },
+  { from: 21.4, to: 23.7, i: 9 },
+  { from: 23.7, to: TL.total, i: 10 },
 ];
 function Caption({ t }) {
   const tr = useT();
@@ -643,7 +643,7 @@ export default function PhoneDemo() {
   })();
   const frozen = forcedT != null || reduced;
   // Con reduced-motion: cuadro fijo en el reflow de imágenes (lo más demostrativo).
-  const [t, setT] = useState(forcedT != null ? forcedT : reduced ? 11.6 : 0);
+  const [t, setT] = useState(forcedT != null ? forcedT : reduced ? 10.4 : 0);
 
   useEffect(() => {
     const el = wrapRef.current;
