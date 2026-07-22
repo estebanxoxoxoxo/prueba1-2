@@ -65,21 +65,11 @@ export function preloadGoogle() {
 }
 
 async function finishSignIn(user, source) {
-  const idToken = await user.getIdToken();
-
-  // El servidor verifica el token con el Admin SDK y guarda el lead real.
-  const reg = await fetch('/api/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken, source }),
-  });
-  if (!reg.ok) {
-    // La verificación/guardado falló → tratamos el proceso como NO completado
-    // para que quede registrado en failedLeads (con el email, que sí tenemos).
-    const e = new Error('register_failed');
-    e.code = 'register/verify-failed';
-    e.email = user.email || null;
-    throw e;
+  // Autenticó con Google → para el usuario, el registro YA fue exitoso.
+  // Mostramos el modal de éxito de una, sin depender del guardado en el server.
+  registered = { email: user.email, name: user.displayName };
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(REGISTERED_EVENT, { detail: registered }));
   }
 
   // Conversión Lead con email real (se hashea en el servidor → mejor matching).
@@ -99,10 +89,32 @@ async function finishSignIn(user, source) {
     /* noop */
   }
 
-  registered = { email: user.email, name: user.displayName };
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(REGISTERED_EVENT, { detail: registered }));
+  // Persistencia en el server (best-effort). El servidor verifica el token con
+  // el Admin SDK y guarda el lead real. Si falla, lo dejamos en failedLeads con
+  // el email + el status HTTP para poder recuperar el lead y diagnosticar.
+  try {
+    const idToken = await user.getIdToken();
+    const reg = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken, source }),
+    });
+    if (!reg.ok) {
+      const detail = await reg.text().catch(() => '');
+      logFailedLead(source, {
+        code: 'register/verify-failed',
+        message: `HTTP ${reg.status} ${detail}`.slice(0, 300),
+        email: user.email || null,
+      });
+    }
+  } catch (err) {
+    logFailedLead(source, {
+      code: 'register/network-error',
+      message: err?.message || null,
+      email: user.email || null,
+    });
   }
+
   return registered;
 }
 
@@ -138,13 +150,7 @@ export async function registerWithGoogle(source = 'cta') {
     throw err;
   }
 
-  try {
-    return await finishSignIn(result.user, source);
-  } catch (err) {
-    // Autenticó con Google pero falló la verificación/guardado del lead.
-    logFailedLead(source, err);
-    throw err;
-  }
+  return finishSignIn(result.user, source);
 }
 
 // Se llama una vez al cargar la app para completar el registro si venimos de
@@ -176,10 +182,5 @@ export async function completeRedirectSignIn() {
   if (typeof window !== 'undefined' && window.sessionStorage) {
     window.sessionStorage.removeItem(REDIRECT_SOURCE_KEY);
   }
-  try {
-    return await finishSignIn(result.user, source);
-  } catch (err) {
-    logFailedLead(source, err);
-    return null;
-  }
+  return finishSignIn(result.user, source);
 }
