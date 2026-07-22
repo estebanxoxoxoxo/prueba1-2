@@ -217,24 +217,30 @@ export default {
 
   phone: {
     nav: ["Home", "History", "Saved", "Settings"],
-    home: {
-      greeting: "Hi, Alex",
-      prompt: "What do you want to discover today?",
-      opts: [
-        { t: "Chat", s: "Talk to Smarty about anything" },
-        { t: "Search content", s: "Find information from the web" },
-        { t: "Search images", s: "Explore and discover amazing images" },
-        { t: "Search videos", s: "Find and play videos about what you're looking for" },
+
+    captions: [
+      "Search for anything.",
+      "Smarty analyzes every result, in real time.",
+      "It blocks the inappropriate before it appears.",
+      "Your child only sees the good.",
+      "Ask anything, without fear.",
+      "Answers for their age, always moderated.",
+      "Even images — only what's appropriate gets through.",
+      "They learn about everything. You, at ease.",
+    ],
+
+    // Ch. 1 — Search videos + live moderation
+    videos: {
+      searchQuery: "dinosaurs 🦕",
+      reviewed: "Reviewed",
+      blocked: "Blocked",
+      blockedTag: "Blocked",
+      reasons: { violent: "Violent", clickbait: "Clickbait", ads: "Ad" },
+      good: [
+        { title: "The world of dinosaurs", channel: "Veritasium" },
+        { title: "How did dinosaurs live?", channel: "Smile and Learn" },
+        { title: "Dinosaurs for kids", channel: "Kurzgesagt" },
       ],
-    },
-    chat: {
-      title: "Chat with Smarty",
-      moderated: "Moderated conversation",
-      query: "Can you find me a video about dinosaurs? 🦕",
-      botIntro: "Awesome! 🦖 I found a great one — safe and already approved for you:",
-      cardTitle: "The world of dinosaurs",
-      views: "1.4M views",
-      inputPlaceholder: "Type your message…",
     },
     player: {
       playing: "Now playing",
@@ -242,12 +248,37 @@ export default {
       metaViews: "1.4M views",
       approved: "Reviewed and approved by Smarty",
     },
-    captions: [
-      "Your child opens the chat",
-      "They ask for whatever they want to learn",
-      "Smarty finds it and moderates it",
-      "Only safe, approved content",
-    ],
+
+    // Ch. 2 — A chat that teaches
+    chat: {
+      title: "Chat with Smarty",
+      moderated: "Moderated conversation",
+      query: "Why did the dinosaurs go extinct? 🦕",
+      botText:
+        "Great question! 🦖 About 66 million years ago, a huge meteorite hit the Earth and changed the climate. Many dinosaurs couldn't adapt.",
+      ageChip: "Answer for age 8",
+      inputPlaceholder: "Type your message…",
+    },
+
+    // Ch. 3 — Search images (visual moderation)
+    images: {
+      searchQuery: "dinosaurs",
+      reason: "Not allowed",
+      reviewed: "9 reviewed",
+      blocked: "1 blocked",
+    },
+
+    // Ch. 4 — Close: peace of mind for parents
+    summary: {
+      title: "Today's summary",
+      learned: "Alex learned today",
+      topics: ["Dinosaurs", "Prehistory", "Planets"],
+      stats: [
+        { n: "0", l: "ads" },
+        { n: "0", l: "strangers" },
+        { n: "100%", l: "moderated" },
+      ],
+    },
   },
 
   screens: {

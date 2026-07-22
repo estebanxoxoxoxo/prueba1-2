@@ -216,27 +216,33 @@ export default {
     note: 'Revisá tu casilla (y el spam) cuando te escribamos.',
   },
 
-  // "Video" animado del hero (PhoneDemo)
+  // "Video" animado del hero (PhoneDemo) — demo de 4 capítulos
   phone: {
     nav: ['Inicio', 'Historial', 'Guardados', 'Ajustes'],
-    home: {
-      greeting: 'Hola, Alex',
-      prompt: '¿Qué quieres descubrir hoy?',
-      opts: [
-        { t: 'Chat', s: 'Habla con Smarty sobre cualquier tema' },
-        { t: 'Buscar contenidos', s: 'Encuentra información de la web' },
-        { t: 'Buscar imágenes', s: 'Explora y descubre imágenes increíbles' },
-        { t: 'Buscar videos', s: 'Encuentra y reproduce videos sobre lo que buscas' },
+
+    captions: [
+      'Busca lo que quiera.',
+      'Smarty analiza cada resultado, en tiempo real.',
+      'Bloquea lo inapropiado antes de que aparezca.',
+      'Tu hijo solo ve lo bueno.',
+      'Pregunta lo que quiera, sin miedo.',
+      'Respuestas a su edad, siempre moderadas.',
+      'Hasta en imágenes, solo pasa lo apropiado.',
+      'Él aprende de todo. Vos, tranquilo.',
+    ],
+
+    // Cap. 1 — Buscar videos + moderación en vivo
+    videos: {
+      searchQuery: 'dinosaurios 🦕',
+      reviewed: 'Revisados',
+      blocked: 'Bloqueados',
+      blockedTag: 'Bloqueado',
+      reasons: { violent: 'Violento', clickbait: 'Clickbait', ads: 'Publicidad' },
+      good: [
+        { title: 'El mundo de los dinosaurios', channel: 'Veritasium' },
+        { title: '¿Cómo vivían los dinosaurios?', channel: 'Smile and Learn' },
+        { title: 'Dinosaurios para chicos', channel: 'Kurzgesagt' },
       ],
-    },
-    chat: {
-      title: 'Chat con Smarty',
-      moderated: 'Conversación moderada',
-      query: '¿Me buscás un video sobre dinosaurios? 🦕',
-      botIntro: '¡Genial! 🦖 Encontré uno buenísimo, seguro y ya aprobado para vos:',
-      cardTitle: 'El mundo de los dinosaurios',
-      views: '1.4 M visualizaciones',
-      inputPlaceholder: 'Escribe tu mensaje…',
     },
     player: {
       playing: 'Reproduciendo',
@@ -244,12 +250,37 @@ export default {
       metaViews: '1.4 M vistas',
       approved: 'Revisado y aprobado por Smarty',
     },
-    captions: [
-      'Tu hijo entra al chat',
-      'Pide lo que quiera aprender',
-      'Smarty lo busca y lo modera',
-      'Solo contenido seguro y aprobado',
-    ],
+
+    // Cap. 2 — Chat que enseña
+    chat: {
+      title: 'Chat con Smarty',
+      moderated: 'Conversación moderada',
+      query: '¿Por qué se extinguieron los dinosaurios? 🦕',
+      botText:
+        '¡Gran pregunta! 🦖 Hace 66 millones de años, un enorme meteorito chocó contra la Tierra y cambió el clima. Muchos dinosaurios no pudieron adaptarse.',
+      ageChip: 'Respuesta para 8 años',
+      inputPlaceholder: 'Escribe tu mensaje…',
+    },
+
+    // Cap. 3 — Buscar imágenes (moderación visual)
+    images: {
+      searchQuery: 'dinosaurios',
+      reason: 'No apto',
+      reviewed: '9 revisadas',
+      blocked: '1 bloqueada',
+    },
+
+    // Cap. 4 — Cierre: tranquilidad del padre
+    summary: {
+      title: 'Resumen de hoy',
+      learned: 'Alex aprendió hoy',
+      topics: ['Dinosaurios', 'Prehistoria', 'Planetas'],
+      stats: [
+        { n: '0', l: 'anuncios' },
+        { n: '0', l: 'extraños' },
+        { n: '100%', l: 'moderado' },
+      ],
+    },
   },
 
   // Frames estáticos de la sección "La solución" (AppScreens)
