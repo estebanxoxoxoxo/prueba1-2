@@ -21,6 +21,7 @@ import dino3 from '../assets/dino-3.jpg';
 import dino4 from '../assets/dino-4.jpg';
 import dino5 from '../assets/dino-5.jpg';
 import dino6 from '../assets/dino-6.jpg';
+import Owl from './Owl';
 import { useT } from '../i18n/core';
 
 /* ============================================================
@@ -51,8 +52,10 @@ const TL = {
   // Menú 4 → Videos
   m4In: 16.6, m4Tap: 17.2, m4End: 17.8,
   vidIn: 17.8, vidScan: 18.8, vidBlock1: 19.6, vidBlock2: 20.5, vidBlock3: 21.4, vidCounter: 22.3,
-  tapVideo: 23.1, playerIn: 23.7, playStart: 24.5, vidEnd: 26.0,
-  total: 26.6,
+  tapVideo: 23.1, playerIn: 23.7, playStart: 24.5, vidEnd: 26.5,
+  // Cierre de marca (fondo blanco + logo) tras 2s de reproducción
+  outroIn: 26.5,
+  total: 29.0,
 };
 
 const clampNum = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -508,9 +511,9 @@ function VideoSearchScreen({ t, tr }) {
 }
 
 function PlayerScreen({ t, tr }) {
-  if (t < TL.playerIn - 0.1) return null;
+  if (t < TL.playerIn - 0.1 || t > TL.vidEnd + 0.5) return null;
   const inn = easeOut(interp(t, [TL.playerIn, TL.playerIn + 0.47], [0, 1]));
-  const out = interp(t, [TL.vidEnd, TL.total], [1, 0]);
+  const out = interp(t, [TL.vidEnd, TL.vidEnd + 0.4], [1, 0]);
   const playing = t >= TL.playStart;
   const zoom = playing ? interp(t, [TL.playStart, TL.vidEnd], [1, 1.08]) : 1;
   const progress = interp(t, [TL.playStart, TL.vidEnd], [0, 0.14]);
@@ -545,6 +548,21 @@ function PlayerScreen({ t, tr }) {
           <ShieldFilledIcon style={{ width: 15, height: 15 }} /> {tr.phone.player.approved}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ---------- Cierre de marca (fondo blanco + logo + Smarty) ---------- */
+function OutroScreen({ t, tr }) {
+  if (t < TL.outroIn - 0.1) return null;
+  const inn = easeOut(interp(t, [TL.outroIn, TL.outroIn + 0.5], [0, 1]));
+  const out = interp(t, [TL.total - 0.4, TL.total], [1, 0]);
+  const textIn = easeOut(interp(t, [TL.outroIn + 0.2, TL.outroIn + 0.7], [0, 1]));
+  return (
+    <div style={{ position: 'absolute', inset: 0, background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', opacity: inn * out, zIndex: 8 }}>
+      <Owl style={{ width: 108, height: 108, transform: `scale(${0.7 + 0.3 * inn})` }} />
+      <span style={{ marginTop: 14, fontSize: 42, fontWeight: 900, color: 'var(--violet)', letterSpacing: '-0.03em', opacity: textIn, transform: `translateY(${(1 - textIn) * 8}px)` }}>Smarty</span>
+      <span style={{ marginTop: 8, fontSize: 13, fontWeight: 700, color: 'var(--muted)', textAlign: 'center', opacity: textIn }}>{tr.brand.tagline}</span>
     </div>
   );
 }
@@ -619,6 +637,7 @@ function Phone({ t, tr }) {
           <MenuScreen t={t} tr={tr} from={TL.m4In} to={TL.m4End} tapAt={TL.m4Tap} highlight={3} />
           <VideoSearchScreen t={t} tr={tr} />
           <PlayerScreen t={t} tr={tr} />
+          <OutroScreen t={t} tr={tr} />
         </div>
       </div>
     </div>
