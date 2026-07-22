@@ -21,7 +21,11 @@ const POPUP_FALLBACK_CODES = new Set([
 export function preloadGoogle() {
   if (!googleReady) {
     googleReady = (async () => {
-      const res = await fetch('/api/firebase-config');
+      // cache: 'no-store' para no arrastrar una respuesta vieja que haya
+      // quedado guardada en el navegador de antes de que este endpoint
+      // mandara Cache-Control: no-store (esa respuesta vieja podía traer la
+      // apiKey con comillas/coma pegadas y romper el login).
+      const res = await fetch('/api/firebase-config', { cache: 'no-store' });
       if (!res.ok) throw new Error('config_failed');
       const config = await res.json();
       const [{ initializeApp, getApps }, authMod] = await Promise.all([
