@@ -216,42 +216,36 @@ export default {
     note: 'Revisá tu casilla (y el spam) cuando te escribamos.',
   },
 
-  // "Video" animado del hero (PhoneDemo) — demo de 4 capítulos
+  // Demo animado del hero (PhoneDemo): menú → chat → menú → imágenes →
+  // menú → buscar contenidos. La moderación (con reflow) se ve en imágenes
+  // y en contenidos.
   phone: {
     nav: ['Inicio', 'Historial', 'Guardados', 'Ajustes'],
 
     captions: [
-      'Busca lo que quiera.',
-      'Smarty analiza cada resultado, en tiempo real.',
-      'Bloquea lo inapropiado antes de que aparezca.',
-      'Tu hijo solo ve lo bueno.',
+      'Un entorno completo, hecho para él.',
       'Pregunta lo que quiera, sin miedo.',
       'Respuestas a su edad, siempre moderadas.',
-      'Hasta en imágenes, solo pasa lo apropiado.',
-      'Él aprende de todo. Vos, tranquilo.',
+      'Y todo lo que busca, lo modera.',
+      'Analiza cada imagen y bloquea lo inapropiado.',
+      'Reordena y solo deja lo bueno.',
+      'Explora cualquier tema. Cada artículo, ya revisado.',
+      'Todo el conocimiento, sin nada de lo malo.',
     ],
 
-    // Cap. 1 — Buscar videos + moderación en vivo
-    videos: {
-      searchQuery: 'dinosaurios 🦕',
-      reviewed: 'Revisados',
-      blocked: 'Bloqueados',
-      blockedTag: 'Bloqueado',
-      reasons: { violent: 'Violento', clickbait: 'Clickbait', ads: 'Publicidad' },
-      good: [
-        { title: 'El mundo de los dinosaurios', channel: 'Veritasium' },
-        { title: '¿Cómo vivían los dinosaurios?', channel: 'Smile and Learn' },
-        { title: 'Dinosaurios para chicos', channel: 'Kurzgesagt' },
+    // Menú (pantalla de inicio)
+    home: {
+      greeting: 'Hola, Alex',
+      prompt: '¿Qué quieres descubrir hoy?',
+      opts: [
+        { t: 'Chat', s: 'Habla con Smarty sobre cualquier tema' },
+        { t: 'Buscar contenidos', s: 'Artículos e info de la web' },
+        { t: 'Buscar imágenes', s: 'Explora imágenes seguras' },
+        { t: 'Buscar videos', s: 'Videos moderados sobre lo que quiera' },
       ],
     },
-    player: {
-      playing: 'Reproduciendo',
-      title: 'El mundo de los dinosaurios',
-      metaViews: '1.4 M vistas',
-      approved: 'Revisado y aprobado por Smarty',
-    },
 
-    // Cap. 2 — Chat que enseña
+    // Chat que enseña
     chat: {
       title: 'Chat con Smarty',
       moderated: 'Conversación moderada',
@@ -262,23 +256,26 @@ export default {
       inputPlaceholder: 'Escribe tu mensaje…',
     },
 
-    // Cap. 3 — Buscar imágenes (moderación visual)
+    // Buscar imágenes (moderación visual + reflow)
     images: {
       searchQuery: 'dinosaurios',
-      reason: 'No apto',
+      reasons: { age: 'No apto', violent: 'Violento' },
       reviewed: '9 revisadas',
-      blocked: '1 bloqueada',
+      blocked: '2 bloqueadas',
     },
 
-    // Cap. 4 — Cierre: tranquilidad del padre
-    summary: {
-      title: 'Resumen de hoy',
-      learned: 'Alex aprendió hoy',
-      topics: ['Dinosaurios', 'Prehistoria', 'Planetas'],
-      stats: [
-        { n: '0', l: 'anuncios' },
-        { n: '0', l: 'extraños' },
-        { n: '100%', l: 'moderado' },
+    // Buscar contenidos (artículos: moderación + reflow)
+    articles: {
+      title: 'Buscar contenidos',
+      searchQuery: 'el sistema solar',
+      reason: 'No apto',
+      reviewed: '12 revisados',
+      blocked: '1 bloqueado',
+      list: [
+        { title: 'El sistema solar explicado para chicos', source: 'Smile and Learn' },
+        { title: '¿Cuántos planetas hay y cómo son?', source: 'National Geographic Kids' },
+        { title: 'Las estrellas y las galaxias', source: 'BBC Mundo' },
+        { title: 'Viaje al centro del Sol', source: 'Kids Encyclopedia' },
       ],
     },
   },

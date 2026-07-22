@@ -2,28 +2,25 @@ import { useEffect, useRef, useState } from 'react';
 import { useAnimationFrame, useReducedMotion } from 'motion/react';
 import {
   SparkleIcon,
-  PlayIcon,
+  ChatIcon,
   SearchIcon,
   ImageIcon,
+  PlayIcon,
+  ChevronIcon,
   ArrowLeftIcon,
   ShieldFilledIcon,
   VerifiedIcon,
   SendIcon,
   CheckIcon,
   XIcon,
-  NoAdsIcon,
-  UsersOffIcon,
 } from './icons';
-import poster from '../assets/miniatura.jpg';
 import { useT } from '../i18n/core';
 
 /* ============================================================
-   Demo animada del hero (React + Motion) — versión demostrativa
-   de 4 capítulos, todo en DOM/CSS (sin MP4). Loopea sola.
-     1. Buscar videos + MODERACIÓN en vivo (bloquea lo malo)
-     2. Chat que enseña (respuesta a su edad)
-     3. Buscar imágenes (moderación visual)
-     4. Cierre: resumen / tranquilidad del padre
+   Demo animada del hero (React + Motion), todo en DOM/CSS.
+   Recorrido: menú → chat → menú → imágenes → menú → contenidos.
+   La moderación se ve en imágenes y contenidos: al bloquear algo,
+   el resto se REACOMODA (reflow) para no dejar huecos. Loopea sola.
    ============================================================ */
 
 const SCREEN_W = 330;
@@ -34,27 +31,15 @@ const DESIGN_H = SCREEN_H + PHONE_PAD * 2; // 690
 
 // Línea de tiempo en segundos (loopea en TL.total).
 const TL = {
-  // Cap. 1 — Videos + moderación (0–10.5)
-  gridIn: 0.2,
-  scanStart: 1.3,
-  good1: 2.0, block1: 2.3,
-  good2: 3.0, block2: 3.3,
-  good3: 4.0, block3: 4.3,
-  scanEnd: 5.4,
-  tapVideo: 6.6,
-  playerIn: 7.3,
-  playStart: 8.1,
-  cap1End: 10.5,
-  // Cap. 2 — Chat (10.5–17.5)
-  chatIn: 10.6,
-  typeStart: 11.5, typeEnd: 13.3,
-  send: 13.5, botTyping: 13.8, botText: 14.3, ageChip: 15.1,
-  cap2End: 17.5,
-  // Cap. 3 — Imágenes (17.5–22.5)
-  imgIn: 17.6, imgScanStart: 18.4, imgBlock: 19.5, imgCounter: 20.4,
-  cap3End: 22.5,
-  // Cap. 4 — Resumen (22.5–28)
-  sumIn: 22.7, sumChips: 23.6, sumStats: 24.7,
+  // Menú 1 → Chat
+  m1In: 0.2, m1Tap: 1.5, m1End: 2.5,
+  chatIn: 2.5, cType0: 3.3, cType1: 5.0, cSend: 5.2, cBotTyping: 5.5, cBotText: 6.0, cAgeChip: 6.8, chatEnd: 8.7,
+  // Menú 2 → Imágenes
+  m2In: 8.8, m2Tap: 10.1, m2End: 11.3,
+  imgIn: 11.3, imgScan: 12.1, imgBlock1: 12.9, imgBlock2: 13.8, imgCounter: 14.9, imgEnd: 17.2,
+  // Menú 3 → Contenidos
+  m3In: 17.3, m3Tap: 18.7, m3End: 19.9,
+  artIn: 19.9, artScan: 20.9, artBlock: 21.9, artCounter: 23.0, artEnd: 27.2,
   total: 28.0,
 };
 
@@ -67,8 +52,29 @@ function interp(x, [x0, x1], [y0, y1], clamp = true) {
 }
 const easeOut = (p) => 1 - Math.pow(1 - clampNum(p, 0, 1), 3);
 const px = (n) => `${n}px`;
-// Aparece (fade+slide in) al entrar al capítulo y se va al final.
-const chapOut = (t, end, d = 0.4) => interp(t, [end - d, end], [1, 0]);
+
+// Progreso de "corrimiento" de un bloqueo (para el reflow).
+const shift = (t, at) => easeOut(interp(t, [at + 0.35, at + 0.95], [0, 1]));
+// Slot de reflow: cuántos lugares se corre el item i por los bloqueos previos.
+function reflowSlot(i, t, blocks) {
+  let s = i;
+  for (const b of blocks) if (b.idx < i) s -= shift(t, b.at);
+  return s;
+}
+// (col,row) de un slot en grilla; interpola entre enteros para slots fraccionarios.
+function slotXY(slot, cfg) {
+  const col = ((slot % cfg.cols) + cfg.cols) % cfg.cols;
+  const row = Math.floor(slot / cfg.cols);
+  return { x: cfg.pad + col * (cfg.w + cfg.gap), y: cfg.top + row * (cfg.w + cfg.gap) };
+}
+function reflowXY(s, cfg) {
+  const s0 = Math.floor(s + 1e-6);
+  const f = s - s0;
+  const a = slotXY(s0, cfg);
+  if (f < 1e-4) return a;
+  const b = slotXY(s0 + 1, cfg);
+  return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
+}
 
 /* ---------- Indicador de "tap" (auto-centrado en su contenedor) ---------- */
 function TapPulse({ t, at, light }) {
@@ -102,200 +108,106 @@ function TypingDots({ t }) {
   );
 }
 
-/* ---------- Barra de búsqueda (cabecera reutilizable) ---------- */
-function SearchBar({ query, icon }) {
+function SearchBar({ query, icon, back }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '2px 16px 0', padding: '10px 14px', background: '#fff', border: '1.5px solid #e4e0f4', borderRadius: 'var(--r-pill)', boxShadow: 'var(--sh-xs)' }}>
-      <span style={{ color: 'var(--violet)', display: 'grid', placeItems: 'center' }}>{icon}</span>
-      <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--ink)' }}>{query}</span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '4px 16px 0' }}>
+      {back && <span style={{ width: 30, height: 30, borderRadius: 10, flex: 'none', display: 'grid', placeItems: 'center', background: '#fff', border: '1px solid var(--line-2)', color: 'var(--ink)' }}><ArrowLeftIcon style={{ width: 16, height: 16 }} /></span>}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 9, padding: '10px 14px', background: '#fff', border: '1.5px solid #e4e0f4', borderRadius: 'var(--r-pill)', boxShadow: 'var(--sh-xs)' }}>
+        <span style={{ color: 'var(--violet)', display: 'grid', placeItems: 'center' }}>{icon}</span>
+        <span style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--ink)' }}>{query}</span>
+      </div>
     </div>
   );
 }
 
-/* ---------- Contador de moderación (revisados / bloqueados) ---------- */
-function ModCounter({ reviewedLabel, reviewed, blockedLabel, blocked }) {
+function ModPills({ t, at, reviewed, blocked }) {
+  const op = interp(t, [at, at + 0.35], [0, 1]);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '9px 16px 4px' }}>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 800, color: 'var(--violet-ink)', background: 'rgba(109,40,217,0.09)', padding: '4px 9px', borderRadius: 'var(--r-pill)' }}>
-        <ShieldFilledIcon style={{ width: 12, height: 12, color: 'var(--violet)' }} /> {reviewedLabel} {reviewed}
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 18, display: 'flex', justifyContent: 'center', gap: 8, opacity: op }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: 'var(--violet-ink)', background: 'rgba(109,40,217,0.1)', padding: '5px 11px', borderRadius: 'var(--r-pill)' }}>
+        <ShieldFilledIcon style={{ width: 12, height: 12, color: 'var(--violet)' }} /> {reviewed}
       </span>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 800, color: '#b4342f', background: 'rgba(220,38,38,0.09)', padding: '4px 9px', borderRadius: 'var(--r-pill)' }}>
-        <XIcon style={{ width: 11, height: 11 }} /> {blockedLabel} {blocked}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: '#b4342f', background: 'rgba(220,38,38,0.1)', padding: '5px 11px', borderRadius: 'var(--r-pill)' }}>
+        <XIcon style={{ width: 11, height: 11 }} /> {blocked}
       </span>
     </div>
   );
 }
 
 /* ============================================================
-   CAP. 1 — Buscar videos + moderación en vivo
+   MENÚ (pantalla de inicio) — aparece 3 veces y "tapea" una opción
    ============================================================ */
-const GRID_PAD = 16;
-const GRID_GAP = 10;
-const GRID_TOP = 92;
-const CARD_W = (SCREEN_W - GRID_PAD * 2 - GRID_GAP) / 2; // 144
-const CARD_H = 120;
-const ROW_H = CARD_H + GRID_GAP;
-const GOOD_GRADS = ['linear-gradient(135deg,#f97316,#ef4444)', 'linear-gradient(135deg,#2f6bff,#22a6c9)', 'linear-gradient(135deg,#8b5cf6,#6d28d9)'];
-const GOOD_DUR = ['5:12', '6:40', '4:28'];
-// good indices 0,2,4 ; bad 1,3,5
-const CARDS = [
-  { good: true, gi: 0, at: TL.good1 },
-  { good: false, reason: 'violent', at: TL.block1 },
-  { good: true, gi: 1, at: TL.good2 },
-  { good: false, reason: 'clickbait', at: TL.block2 },
-  { good: true, gi: 2, at: TL.good3 },
-  { good: false, reason: 'ads', at: TL.block3 },
-];
+const HOME_OPT_ICONS = [<ChatIcon key="chat" />, <SearchIcon key="search" />, <ImageIcon key="image" />, <PlayIcon key="play" />];
 
-function ResultCard({ i, card, t, tr }) {
-  const col = i % 2;
-  const row = Math.floor(i / 2);
-  const x = GRID_PAD + col * (CARD_W + GRID_GAP);
-  const y = GRID_TOP + row * ROW_H;
-
-  const appear = easeOut(interp(t, [TL.gridIn + i * 0.08, TL.gridIn + i * 0.08 + 0.4], [0, 1]));
-  const enterY = (1 - appear) * -14;
-
-  // bloqueado: sello rojo + motivo, luego se retira (queda el hueco).
-  const remove = card.good ? 0 : easeOut(interp(t, [card.at + 0.55, card.at + 0.95], [0, 1]));
-  const opacity = appear * (1 - remove);
-  const scale = 1 - 0.12 * remove;
-  const checkOn = card.good ? interp(t, [card.at, card.at + 0.3], [0, 1]) : 0;
-  const blockOn = card.good ? 0 : interp(t, [card.at, card.at + 0.28], [0, 1]);
+function MenuScreen({ t, tr, from, to, tapAt, highlight }) {
+  if (t < from - 0.1 || t > to + 0.35) return null;
+  const inn = easeOut(interp(t, [from, from + 0.4], [0, 1]));
+  const out = interp(t, [to - 0.3, to], [1, 0]);
+  const opacity = Math.min(inn, out);
+  const ringOp = interp(t, [tapAt - 0.35, tapAt - 0.12], [0, 1]) * interp(t, [to - 0.25, to], [1, 0]);
+  const press = t < tapAt + 0.1 ? interp(t, [tapAt - 0.05, tapAt + 0.1], [1, 0.97]) : interp(t, [tapAt + 0.1, tapAt + 0.35], [0.97, 1]);
 
   return (
-    <div style={{ position: 'absolute', left: x, top: y, width: CARD_W, height: CARD_H, opacity, transform: `translateY(${enterY}px) scale(${scale})`, transformOrigin: 'center' }}>
-      <div style={{ position: 'relative', width: '100%', height: 74, borderRadius: 12, overflow: 'hidden', background: card.good ? GOOD_GRADS[card.gi] : 'linear-gradient(135deg,#c9d0dd,#9aa3b5)' }}>
-        {!card.good && (
-          <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(3px)', background: 'rgba(255,255,255,0.06)' }} />
-        )}
-        {card.good ? (
-          <>
-            <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-              <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(0,0,0,0.42)', display: 'grid', placeItems: 'center' }}><PlayIcon style={{ width: 14, height: 14, color: '#fff' }} /></span>
-            </span>
-            <em style={{ position: 'absolute', right: 5, bottom: 5, fontStyle: 'normal', background: 'rgba(0,0,0,0.72)', color: '#fff', fontSize: 8.5, fontWeight: 800, padding: '1px 4px', borderRadius: 4 }}>{GOOD_DUR[card.gi]}</em>
-            {/* check verde de aprobado */}
-            <span style={{ position: 'absolute', left: 5, top: 5, width: 20, height: 20, borderRadius: '50%', background: 'var(--green)', border: '2px solid #fff', display: 'grid', placeItems: 'center', opacity: checkOn, transform: `scale(${0.6 + 0.4 * checkOn})` }}>
-              <CheckIcon style={{ width: 11, height: 11, color: '#fff' }} />
-            </span>
-          </>
-        ) : (
-          <>
-            {/* velo rojo + escudo + motivo */}
-            <span style={{ position: 'absolute', inset: 0, background: 'rgba(220,38,38,0.34)', opacity: blockOn }} />
-            <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: blockOn }}>
-              <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(180,25,25,0.92)', display: 'grid', placeItems: 'center', border: '2px solid #fff' }}><XIcon style={{ width: 15, height: 15, color: '#fff' }} /></span>
-            </span>
-            <span style={{ position: 'absolute', left: '50%', bottom: 6, transform: 'translateX(-50%)', whiteSpace: 'nowrap', background: '#b4191a', color: '#fff', fontSize: 9.5, fontWeight: 800, padding: '2px 7px', borderRadius: 'var(--r-pill)', opacity: blockOn }}>
-              {tr.phone.videos.reasons[card.reason]}
-            </span>
-          </>
-        )}
-      </div>
-      {card.good ? (
-        <div style={{ padding: '6px 2px 0' }}>
-          <p style={{ fontSize: 10.5, fontWeight: 900, color: 'var(--ink)', lineHeight: 1.2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{tr.phone.videos.good[card.gi].title}</p>
-          <p style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700, color: 'var(--muted)', marginTop: 3 }}>{tr.phone.videos.good[card.gi].channel} <VerifiedIcon style={{ width: 10, height: 10, color: 'var(--violet)' }} /></p>
-        </div>
-      ) : (
-        <div style={{ padding: '6px 2px 0' }}>
-          <span style={{ display: 'inline-block', width: '70%', height: 8, borderRadius: 4, background: '#e4e0f4' }} />
-          <span style={{ display: 'block', width: '45%', height: 7, borderRadius: 4, background: '#eee9f7', marginTop: 5 }} />
-        </div>
-      )}
-      {i === 0 && <TapPulse t={t} at={TL.tapVideo} />}
-    </div>
-  );
-}
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: '#f6f5fb', opacity, zIndex: 2 }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 20px 0' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontWeight: 900, fontSize: 20, color: 'var(--violet)' }}>
+          <SparkleIcon style={{ width: 22, height: 22 }} /> Smarty
+        </span>
+        <span style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, var(--violet-2), var(--teal))', border: '2px solid #fff', boxShadow: 'var(--sh-xs)' }} />
+      </header>
 
-function VideoSearchScreen({ t, tr }) {
-  if (t > TL.playerIn + 0.5) return null;
-  const out = chapOut(t, TL.playerIn + 0.4, 0.4);
-  const scanning = t >= TL.scanStart && t <= TL.scanEnd;
-  const scanY = interp(t, [TL.scanStart, TL.scanEnd], [GRID_TOP - 8, GRID_TOP + 3 * ROW_H - 4]);
-  const scanOp = interp(t, [TL.scanStart, TL.scanStart + 0.2], [0, 1]) * interp(t, [TL.scanEnd - 0.3, TL.scanEnd], [1, 0]);
-  const reviewed = Math.round(interp(t, [TL.scanStart, TL.scanEnd], [3, 24]));
-  const blocked = (t >= TL.block1 ? 1 : 0) + (t >= TL.block2 ? 1 : 0) + (t >= TL.block3 ? 1 : 0);
-
-  return (
-    <div style={{ position: 'absolute', inset: 0, background: '#f6f5fb', opacity: out }}>
-      <SearchBar query={tr.phone.videos.searchQuery} icon={<SearchIcon style={{ width: 17, height: 17 }} />} />
-      <ModCounter reviewedLabel={tr.phone.videos.reviewed} reviewed={reviewed} blockedLabel={tr.phone.videos.blocked} blocked={blocked} />
-
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        {CARDS.map((c, i) => <ResultCard key={i} i={i} card={c} t={t} tr={tr} />)}
-        {scanning && (
-          <div style={{ position: 'absolute', left: 10, right: 10, top: scanY, height: 3, borderRadius: 3, background: 'linear-gradient(90deg,transparent,var(--violet),transparent)', boxShadow: '0 0 14px 2px rgba(109,40,217,0.55)', opacity: scanOp }} />
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ---------- Player (póster real + reproducción simulada) ---------- */
-function PlayerScreen({ t, tr }) {
-  if (t < TL.playerIn - 0.1 || t > TL.cap1End + 0.5) return null;
-  const inn = easeOut(interp(t, [TL.playerIn, TL.playerIn + 0.47], [0, 1]));
-  const out = chapOut(t, TL.cap1End + 0.4, 0.4);
-  const playing = t >= TL.playStart;
-  const zoom = playing ? interp(t, [TL.playStart, TL.cap1End], [1, 1.08]) : 1;
-  const progress = interp(t, [TL.playStart, TL.cap1End], [0, 0.14]);
-  const cur = Math.floor(interp(t, [TL.playStart, TL.cap1End], [0, 8]));
-
-  return (
-    <div style={{ position: 'absolute', inset: 0, transform: `translateY(${(1 - inn) * 100}%)`, background: '#0b0a1f', display: 'flex', flexDirection: 'column', color: '#fff', opacity: out, zIndex: 2 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
-        <span style={{ width: 32, height: 32, borderRadius: 11, display: 'grid', placeItems: 'center', background: 'rgba(255,255,255,0.12)', color: '#fff' }}><ArrowLeftIcon style={{ width: 17, height: 17 }} /></span>
-        <strong style={{ fontSize: 13, fontWeight: 800 }}>{tr.phone.player.playing}</strong>
+      <div style={{ padding: '12px 20px 4px' }}>
+        <h4 style={{ fontSize: 26, fontWeight: 900, color: 'var(--ink)' }}>{tr.phone.home.greeting} <span aria-hidden="true">👋</span></h4>
+        <p style={{ fontSize: 14, color: 'var(--muted)', fontWeight: 700, marginTop: 3 }}>{tr.phone.home.prompt}</p>
       </div>
 
-      <div style={{ position: 'relative', margin: '0 18px', borderRadius: 16, overflow: 'hidden', aspectRatio: '9 / 16', background: '#000' }}>
-        <img src={poster} alt={tr.phone.player.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${zoom})` }} />
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '40px 12px 10px', background: 'linear-gradient(transparent, rgba(0,0,0,0.72))' }}>
-          <div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.25 }}>{tr.phone.player.title}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5, fontSize: 10.5, fontWeight: 700, opacity: 0.92 }}>
-            Veritasium <VerifiedIcon style={{ width: 12, height: 12, color: '#8b5cf6' }} /> · {tr.phone.player.metaViews}
-          </div>
-          <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.3)', marginTop: 9 }}>
-            <div style={{ height: '100%', width: `${progress * 100}%`, background: '#ff2b53', borderRadius: 4 }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, fontWeight: 700, marginTop: 4, opacity: 0.9 }}>
-            <span>{`0:${String(playing ? cur : 0).padStart(2, '0')}`}</span>
-            <span>0:52</span>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ padding: '14px 18px', display: 'flex', justifyContent: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 999, background: 'rgba(34,197,94,0.16)', color: '#4ade80', fontSize: 12, fontWeight: 800 }}>
-          <ShieldFilledIcon style={{ width: 15, height: 15 }} /> {tr.phone.player.approved}
-        </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 11, padding: '12px 16px 0', minHeight: 0 }}>
+        {tr.phone.home.opts.map((o, i) => {
+          const isHi = i === highlight;
+          const ap = easeOut(interp(t, [from + 0.05 + i * 0.06, from + 0.45 + i * 0.06], [0, 1]));
+          return (
+            <div key={o.t} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 13, background: '#fff', border: '1.5px solid #e2ddf1', borderRadius: 20, padding: '13px 14px', boxShadow: 'var(--sh-sm)', opacity: ap, transform: `translateY(${(1 - ap) * 10}px) scale(${isHi ? press : 1})`, transformOrigin: 'center' }}>
+              <span style={{ width: 52, height: 52, borderRadius: 15, flex: 'none', display: 'grid', placeItems: 'center', background: 'rgba(109,40,217,0.10)', color: 'var(--violet)' }}>{HOME_OPT_ICONS[i]}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 15.5, fontWeight: 900, color: 'var(--ink)' }}>{o.t}</p>
+                <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--muted)', marginTop: 3, lineHeight: 1.3 }}>{o.s}</p>
+              </span>
+              <span style={{ width: 38, height: 38, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center', background: 'rgba(109,40,217,0.08)', color: 'var(--violet)' }}>
+                <ChevronIcon style={{ width: 18, height: 18, transform: 'rotate(-90deg)' }} />
+              </span>
+              {isHi && (
+                <>
+                  <div style={{ position: 'absolute', inset: -3, borderRadius: 22, border: '2px solid var(--violet)', boxShadow: '0 0 0 6px rgba(109,40,217,0.14)', opacity: ringOp, pointerEvents: 'none' }} />
+                  <TapPulse t={t} at={tapAt} />
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 /* ============================================================
-   CAP. 2 — Chat que enseña
+   CHAT que enseña
    ============================================================ */
 function ChatScreen({ t, tr }) {
-  if (t < TL.chatIn - 0.1 || t > TL.cap2End + 0.5) return null;
+  if (t < TL.chatIn - 0.1 || t > TL.chatEnd + 0.5) return null;
   const QUERY = Array.from(tr.phone.chat.query);
   const inn = easeOut(interp(t, [TL.chatIn, TL.chatIn + 0.45], [0, 1]));
-  const out = chapOut(t, TL.cap2End + 0.4, 0.4);
-  const nChars = Math.round(interp(t, [TL.typeStart, TL.typeEnd], [0, QUERY.length]));
+  const out = interp(t, [TL.chatEnd, TL.chatEnd + 0.4], [1, 0]);
+  const nChars = Math.round(interp(t, [TL.cType0, TL.cType1], [0, QUERY.length]));
   const typedText = QUERY.slice(0, nChars).join('');
-  const isTyping = t >= TL.typeStart && t < TL.send;
+  const isTyping = t >= TL.cType0 && t < TL.cSend;
   const caret = Math.floor(t * 3.6) % 2 === 0 ? '▏' : '';
 
-  const showUser = t >= TL.send;
-  const userIn = easeOut(interp(t, [TL.send, TL.send + 0.5], [0, 1]));
-  const botTyping = t >= TL.botTyping && t < TL.botText;
-  const showBot = t >= TL.botText;
-  const botIn = easeOut(interp(t, [TL.botText, TL.botText + 0.5], [0, 1]));
-  const chipIn = easeOut(interp(t, [TL.ageChip, TL.ageChip + 0.4], [0, 1]));
-
+  const showUser = t >= TL.cSend;
+  const userIn = easeOut(interp(t, [TL.cSend, TL.cSend + 0.5], [0, 1]));
+  const botTyping = t >= TL.cBotTyping && t < TL.cBotText;
+  const showBot = t >= TL.cBotText;
+  const botIn = easeOut(interp(t, [TL.cBotText, TL.cBotText + 0.5], [0, 1]));
+  const chipIn = easeOut(interp(t, [TL.cAgeChip, TL.cAgeChip + 0.4], [0, 1]));
   const bubbleTextStyle = { fontSize: 13, fontWeight: 600, lineHeight: 1.45 };
 
   return (
@@ -360,52 +272,51 @@ function ChatScreen({ t, tr }) {
 }
 
 /* ============================================================
-   CAP. 3 — Buscar imágenes (moderación visual)
+   BUSCAR IMÁGENES — moderación + reflow (grilla 3×3)
    ============================================================ */
-const IMG_TOP = 82;
-const IMG_PAD = 16;
-const IMG_GAP = 8;
-const IMG_W = (SCREEN_W - IMG_PAD * 2 - IMG_GAP * 2) / 3; // 94
+const IMG_CFG = { top: 84, pad: 16, gap: 8, w: (SCREEN_W - 32 - 16) / 3, cols: 3 }; // w=94
 const IMG_GRADS = [
   'linear-gradient(135deg,#22c55e,#0d9488)', 'linear-gradient(135deg,#f59e0b,#f97316)', 'linear-gradient(135deg,#2f6bff,#22a6c9)',
-  'linear-gradient(135deg,#8b5cf6,#6d28d9)', 'linear-gradient(135deg,#ef4444,#b91c1c)', 'linear-gradient(135deg,#14b8a6,#0e7490)',
-  'linear-gradient(135deg,#f472b6,#db2777)', 'linear-gradient(135deg,#84cc16,#4d7c0f)', 'linear-gradient(135deg,#38bdf8,#2563eb)',
+  'linear-gradient(135deg,#8b5cf6,#6d28d9)', 'linear-gradient(135deg,#ec4899,#db2777)', 'linear-gradient(135deg,#14b8a6,#0e7490)',
+  'linear-gradient(135deg,#84cc16,#4d7c0f)', 'linear-gradient(135deg,#38bdf8,#2563eb)', 'linear-gradient(135deg,#fb7185,#e11d48)',
 ];
 const IMG_EMOJI = ['🦕', '🦖', '🦴', '🌋', '🥚', '🌿', '🐊', '🦎', '🌊'];
-const IMG_BLOCK_IDX = 4; // el del centro se bloquea
+const IMG_BLOCKS = [{ idx: 2, at: TL.imgBlock1, reason: 'age' }, { idx: 5, at: TL.imgBlock2, reason: 'violent' }];
 
 function ImagesScreen({ t, tr }) {
-  if (t < TL.imgIn - 0.1 || t > TL.cap3End + 0.5) return null;
+  if (t < TL.imgIn - 0.1 || t > TL.imgEnd + 0.5) return null;
   const inn = easeOut(interp(t, [TL.imgIn, TL.imgIn + 0.45], [0, 1]));
-  const out = chapOut(t, TL.cap3End + 0.4, 0.4);
-  const scanning = t >= TL.imgScanStart && t <= TL.imgBlock + 0.4;
-  const scanY = interp(t, [TL.imgScanStart, TL.imgBlock + 0.2], [IMG_TOP - 6, IMG_TOP + 3 * (IMG_W + IMG_GAP)]);
-  const showCounter = interp(t, [TL.imgCounter, TL.imgCounter + 0.35], [0, 1]);
+  const out = interp(t, [TL.imgEnd, TL.imgEnd + 0.4], [1, 0]);
+  const scanning = t >= TL.imgScan && t <= TL.imgBlock2 + 0.4;
+  const scanY = interp(t, [TL.imgScan, TL.imgBlock2 + 0.2], [IMG_CFG.top - 6, IMG_CFG.top + 3 * (IMG_CFG.w + IMG_CFG.gap)]);
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: '#f6f5fb', opacity: out, transform: `scale(${0.98 + 0.02 * inn})`, zIndex: 4 }}>
-      <SearchBar query={tr.phone.images.searchQuery} icon={<ImageIcon style={{ width: 17, height: 17 }} />} />
+      <SearchBar query={tr.phone.images.searchQuery} icon={<ImageIcon style={{ width: 17, height: 17 }} />} back />
 
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         {IMG_GRADS.map((g, i) => {
-          const col = i % 3;
-          const row = Math.floor(i / 3);
-          const x = IMG_PAD + col * (IMG_W + IMG_GAP);
-          const y = IMG_TOP + row * (IMG_W + IMG_GAP);
-          const ap = easeOut(interp(t, [TL.imgIn + 0.1 + i * 0.04, TL.imgIn + 0.5 + i * 0.04], [0, 1]));
-          const isBlocked = i === IMG_BLOCK_IDX;
-          const blockOn = isBlocked ? interp(t, [TL.imgBlock, TL.imgBlock + 0.28], [0, 1]) : 0;
-          const remove = isBlocked ? easeOut(interp(t, [TL.imgBlock + 0.5, TL.imgBlock + 0.9], [0, 1])) : 0;
+          const block = IMG_BLOCKS.find((b) => b.idx === i);
+          const ap = easeOut(interp(t, [TL.imgIn + 0.15 + i * 0.04, TL.imgIn + 0.55 + i * 0.04], [0, 1]));
+          const pos = block ? slotXY(i, IMG_CFG) : reflowXY(reflowSlot(i, t, IMG_BLOCKS), IMG_CFG);
+          const blockOn = block ? interp(t, [block.at, block.at + 0.28], [0, 1]) : 0;
+          const remove = block ? easeOut(interp(t, [block.at + 0.5, block.at + 0.9], [0, 1])) : 0;
+          const checkOn = block ? 0 : interp(t, [TL.imgScan + (i % 3) * 0.3 + 0.4, TL.imgScan + (i % 3) * 0.3 + 0.7], [0, 1]);
           return (
-            <div key={i} style={{ position: 'absolute', left: x, top: y, width: IMG_W, height: IMG_W, borderRadius: 14, overflow: 'hidden', background: g, display: 'grid', placeItems: 'center', fontSize: 30, opacity: ap * (1 - remove), transform: `scale(${(0.8 + 0.2 * ap) * (1 - 0.1 * remove)})` }}>
-              <span aria-hidden="true" style={{ filter: isBlocked ? `blur(${3 * blockOn}px)` : 'none' }}>{IMG_EMOJI[i]}</span>
-              {isBlocked && (
+            <div key={i} style={{ position: 'absolute', left: pos.x, top: pos.y, width: IMG_CFG.w, height: IMG_CFG.w, borderRadius: 14, overflow: 'hidden', background: g, display: 'grid', placeItems: 'center', fontSize: 30, opacity: ap * (1 - remove), transform: `scale(${(0.8 + 0.2 * ap) * (1 - 0.15 * remove)})` }}>
+              <span aria-hidden="true" style={{ filter: block ? `blur(${3 * blockOn}px)` : 'none' }}>{IMG_EMOJI[i]}</span>
+              {!block && (
+                <span style={{ position: 'absolute', left: 5, top: 5, width: 18, height: 18, borderRadius: '50%', background: 'var(--green)', border: '2px solid #fff', display: 'grid', placeItems: 'center', opacity: checkOn }}>
+                  <CheckIcon style={{ width: 10, height: 10, color: '#fff' }} />
+                </span>
+              )}
+              {block && (
                 <>
                   <span style={{ position: 'absolute', inset: 0, background: 'rgba(220,38,38,0.42)', opacity: blockOn }} />
                   <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: blockOn }}>
                     <span style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(180,25,25,0.95)', border: '2px solid #fff', display: 'grid', placeItems: 'center' }}><XIcon style={{ width: 13, height: 13, color: '#fff' }} /></span>
                   </span>
-                  <span style={{ position: 'absolute', left: '50%', bottom: 5, transform: 'translateX(-50%)', whiteSpace: 'nowrap', background: '#b4191a', color: '#fff', fontSize: 8.5, fontWeight: 800, padding: '2px 6px', borderRadius: 'var(--r-pill)', opacity: blockOn }}>{tr.phone.images.reason}</span>
+                  <span style={{ position: 'absolute', left: '50%', bottom: 5, transform: 'translateX(-50%)', whiteSpace: 'nowrap', background: '#b4191a', color: '#fff', fontSize: 8.5, fontWeight: 800, padding: '2px 6px', borderRadius: 'var(--r-pill)', opacity: blockOn }}>{tr.phone.images.reasons[block.reason]}</span>
                 </>
               )}
             </div>
@@ -414,59 +325,80 @@ function ImagesScreen({ t, tr }) {
         {scanning && (
           <div style={{ position: 'absolute', left: 12, right: 12, top: scanY, height: 3, borderRadius: 3, background: 'linear-gradient(90deg,transparent,var(--violet),transparent)', boxShadow: '0 0 14px 2px rgba(109,40,217,0.55)' }} />
         )}
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 20, display: 'flex', justifyContent: 'center', gap: 8, opacity: showCounter }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: 'var(--violet-ink)', background: 'rgba(109,40,217,0.1)', padding: '5px 11px', borderRadius: 'var(--r-pill)' }}>
-            <ShieldFilledIcon style={{ width: 12, height: 12, color: 'var(--violet)' }} /> {tr.phone.images.reviewed}
-          </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 800, color: '#b4342f', background: 'rgba(220,38,38,0.1)', padding: '5px 11px', borderRadius: 'var(--r-pill)' }}>
-            <XIcon style={{ width: 11, height: 11 }} /> {tr.phone.images.blocked}
-          </span>
-        </div>
+        <ModPills t={t} at={TL.imgCounter} reviewed={tr.phone.images.reviewed} blocked={tr.phone.images.blocked} />
       </div>
     </div>
   );
 }
 
 /* ============================================================
-   CAP. 4 — Cierre: resumen / tranquilidad
+   BUSCAR CONTENIDOS — artículos: moderación + reflow (lista)
    ============================================================ */
-const SUMMARY_TOPIC_EMOJI = ['🦕', '🌋', '🪐'];
-const SUMMARY_STAT_ICONS = [<NoAdsIcon key="ads" />, <UsersOffIcon key="str" />, <ShieldFilledIcon key="mod" />];
+const ART_TOP = 92;
+const ART_ROW_H = 78;
+const ART_GRADS = ['linear-gradient(135deg,#f59e0b,#f97316)', 'linear-gradient(135deg,#2f6bff,#22a6c9)', 'linear-gradient(135deg,#8b5cf6,#6d28d9)', 'linear-gradient(135deg,#14b8a6,#0e7490)'];
+const ART_EMOJI = ['🪐', '🌟', '🌌', '🔭'];
+const ART_BLOCKS = [{ idx: 2, at: TL.artBlock }];
+// 5 slots: 0,1 = good0,good1 · 2 = bloqueado · 3,4 = good2,good3
+function ArticlesScreen({ t, tr }) {
+  if (t < TL.artIn - 0.1) return null;
+  const inn = easeOut(interp(t, [TL.artIn, TL.artIn + 0.45], [0, 1]));
+  const out = interp(t, [TL.artEnd, TL.total], [1, 0]);
+  const scanning = t >= TL.artScan && t <= TL.artBlock + 0.4;
+  const scanY = interp(t, [TL.artScan, TL.artBlock + 0.2], [ART_TOP - 6, ART_TOP + 5 * ART_ROW_H]);
+  const slots = [0, 1, 2, 3, 4];
 
-function SummaryScreen({ t, tr }) {
-  if (t < TL.sumIn - 0.1) return null;
-  const inn = easeOut(interp(t, [TL.sumIn, TL.sumIn + 0.5], [0, 1]));
-  const out = chapOut(t, TL.total, 0.4);
   return (
-    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,#faf8ff,#efeafc)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', opacity: inn * out, zIndex: 5 }}>
-      <div style={{ width: 66, height: 66, borderRadius: '50%', display: 'grid', placeItems: 'center', color: '#fff', background: 'linear-gradient(135deg, var(--violet-2), var(--teal))', boxShadow: 'var(--sh-violet)', transform: `scale(${0.7 + 0.3 * inn})` }}>
-        <ShieldFilledIcon style={{ width: 32, height: 32 }} />
-      </div>
-      <p style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--muted)', marginTop: 16 }}>{tr.phone.summary.title}</p>
-      <h4 style={{ fontSize: 21, fontWeight: 900, color: 'var(--ink)', marginTop: 3, textAlign: 'center', lineHeight: 1.15 }}>{tr.phone.summary.learned}</h4>
+    <div style={{ position: 'absolute', inset: 0, background: '#f6f5fb', opacity: out, transform: `translateX(${30 * (1 - inn)}px)`, zIndex: 5 }}>
+      <header style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 16px 8px' }}>
+        <span style={{ width: 30, height: 30, borderRadius: 10, flex: 'none', display: 'grid', placeItems: 'center', background: '#fff', border: '1px solid var(--line-2)', color: 'var(--ink)' }}><ArrowLeftIcon style={{ width: 16, height: 16 }} /></span>
+        <strong style={{ fontSize: 16, fontWeight: 900, color: 'var(--ink)' }}>{tr.phone.articles.title}</strong>
+      </header>
+      <SearchBar query={tr.phone.articles.searchQuery} icon={<SearchIcon style={{ width: 17, height: 17 }} />} />
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 16 }}>
-        {tr.phone.summary.topics.map((topic, i) => {
-          const chip = easeOut(interp(t, [TL.sumChips + i * 0.12, TL.sumChips + 0.4 + i * 0.12], [0, 1]));
+      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+        {slots.map((i) => {
+          const block = ART_BLOCKS.find((b) => b.idx === i);
+          const gi = i < 2 ? i : i - 1; // índice en la lista de buenos
+          const art = block ? null : tr.phone.articles.list[gi];
+          const y = block ? ART_TOP + i * ART_ROW_H : ART_TOP + reflowSlot(i, t, ART_BLOCKS) * ART_ROW_H;
+          const ap = easeOut(interp(t, [TL.artIn + 0.15 + i * 0.05, TL.artIn + 0.55 + i * 0.05], [0, 1]));
+          const blockOn = block ? interp(t, [block.at, block.at + 0.28], [0, 1]) : 0;
+          const remove = block ? easeOut(interp(t, [block.at + 0.5, block.at + 0.9], [0, 1])) : 0;
+          const checkOn = block ? 0 : interp(t, [TL.artScan + 0.5, TL.artScan + 0.8], [0, 1]);
           return (
-            <span key={topic} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 800, color: 'var(--ink)', background: '#fff', border: '1.5px solid var(--line-2)', padding: '7px 13px', borderRadius: 'var(--r-pill)', boxShadow: 'var(--sh-xs)', opacity: chip, transform: `translateY(${(1 - chip) * 8}px)` }}>
-              <span aria-hidden="true">{SUMMARY_TOPIC_EMOJI[i]}</span> {topic}
-            </span>
-          );
-        })}
-      </div>
-
-      <div style={{ display: 'flex', gap: 10, marginTop: 26 }}>
-        {tr.phone.summary.stats.map((s, i) => {
-          const st = easeOut(interp(t, [TL.sumStats + i * 0.12, TL.sumStats + 0.4 + i * 0.12], [0, 1]));
-          return (
-            <div key={s.l} style={{ flex: 1, background: '#fff', border: '1px solid var(--line-2)', borderRadius: 16, padding: '12px 8px', textAlign: 'center', boxShadow: 'var(--sh-xs)', opacity: st, transform: `translateY(${(1 - st) * 10}px)` }}>
-              <span style={{ display: 'grid', placeItems: 'center', width: 26, height: 26, margin: '0 auto', color: 'var(--violet)' }}>{SUMMARY_STAT_ICONS[i]}</span>
-              <div style={{ fontSize: 19, fontWeight: 900, color: 'var(--ink)', marginTop: 4 }}>{s.n}</div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', marginTop: 1 }}>{s.l}</div>
+            <div key={i} style={{ position: 'absolute', left: 16, top: y, width: SCREEN_W - 32, height: ART_ROW_H - 10, display: 'flex', alignItems: 'center', gap: 11, background: '#fff', border: '1px solid #e6e1f4', borderRadius: 16, padding: '10px 12px', boxShadow: 'var(--sh-xs)', opacity: ap * (1 - remove), transform: `scale(${1 - 0.06 * remove})` }}>
+              <span style={{ position: 'relative', width: 50, height: 50, borderRadius: 12, flex: 'none', display: 'grid', placeItems: 'center', fontSize: 24, overflow: 'hidden', background: block ? 'linear-gradient(135deg,#c9d0dd,#9aa3b5)' : ART_GRADS[gi] }}>
+                <span aria-hidden="true" style={{ filter: block ? `blur(${3 * blockOn}px)` : 'none' }}>{block ? '🚫' : ART_EMOJI[gi]}</span>
+                {block && (
+                  <span style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(180,25,25,0.5)', opacity: blockOn }}>
+                    <XIcon style={{ width: 18, height: 18, color: '#fff' }} />
+                  </span>
+                )}
+              </span>
+              {block ? (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: '#b4342f' }}>{tr.phone.articles.reason}</span>
+                  <span style={{ flex: 1, height: 8, borderRadius: 4, background: '#efe6e6' }} />
+                </div>
+              ) : (
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 12.5, fontWeight: 900, color: 'var(--ink)', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{art.title}</p>
+                  <p style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, color: 'var(--muted)', marginTop: 3 }}>{art.source} <VerifiedIcon style={{ width: 11, height: 11, color: 'var(--violet)' }} /></p>
+                </div>
+              )}
+              {!block && (
+                <span style={{ width: 22, height: 22, borderRadius: '50%', flex: 'none', background: 'var(--green)', display: 'grid', placeItems: 'center', opacity: checkOn }}>
+                  <CheckIcon style={{ width: 12, height: 12, color: '#fff' }} />
+                </span>
+              )}
             </div>
           );
         })}
+        {scanning && (
+          <div style={{ position: 'absolute', left: 12, right: 12, top: scanY, height: 3, borderRadius: 3, background: 'linear-gradient(90deg,transparent,var(--violet),transparent)', boxShadow: '0 0 14px 2px rgba(109,40,217,0.55)' }} />
+        )}
+        <ModPills t={t} at={TL.artCounter} reviewed={tr.phone.articles.reviewed} blocked={tr.phone.articles.blocked} />
       </div>
     </div>
   );
@@ -474,20 +406,19 @@ function SummaryScreen({ t, tr }) {
 
 /* ---------- Subtítulo por escena (timings acá, texto en el diccionario) ---------- */
 const CAPTION_TIMES = [
-  { from: 0.2, to: 2.2, i: 0 },
-  { from: 2.2, to: 5.4, i: 1 },
-  { from: 5.4, to: 7.8, i: 2 },
-  { from: 7.8, to: 10.5, i: 3 },
-  { from: 10.6, to: 14.2, i: 4 },
-  { from: 14.2, to: 17.5, i: 5 },
-  { from: 17.6, to: 22.5, i: 6 },
-  { from: 22.6, to: TL.total, i: 7 },
+  { from: 0.3, to: 2.4, i: 0 },
+  { from: 2.6, to: 5.2, i: 1 },
+  { from: 5.3, to: 8.6, i: 2 },
+  { from: 8.8, to: 11.3, i: 3 },
+  { from: 11.4, to: 13.8, i: 4 },
+  { from: 13.8, to: 17.2, i: 5 },
+  { from: 17.3, to: 22.8, i: 6 },
+  { from: 22.8, to: TL.total, i: 7 },
 ];
 function Caption({ t }) {
   const tr = useT();
   let cur = CAPTION_TIMES.find((c) => t >= c.from && t < c.to);
   if (!cur) {
-    // en los micro-huecos de transición, mantené el último válido
     for (let k = CAPTION_TIMES.length - 1; k >= 0; k--) {
       if (t >= CAPTION_TIMES[k].from) { cur = CAPTION_TIMES[k]; break; }
     }
@@ -506,12 +437,12 @@ function Caption({ t }) {
   );
 }
 
-/* ---------- Puntos de capítulo ---------- */
+/* ---------- Puntos de capítulo (3 features) ---------- */
 function ChapterDots({ t }) {
-  const active = t < TL.cap1End ? 0 : t < TL.cap2End ? 1 : t < TL.cap3End ? 2 : 3;
+  const active = t < TL.m2In ? 0 : t < TL.m3In ? 1 : 2;
   return (
     <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 14 }}>
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2].map((i) => (
         <span key={i} style={{ width: i === active ? 20 : 6, height: 6, borderRadius: 3, background: i === active ? 'var(--violet)' : '#d5cfe9', transition: 'width 0.3s ease, background 0.3s ease' }} />
       ))}
     </div>
@@ -531,11 +462,12 @@ function Phone({ t, tr }) {
           </span>
         </div>
         <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
-          <VideoSearchScreen t={t} tr={tr} />
-          <PlayerScreen t={t} tr={tr} />
+          <MenuScreen t={t} tr={tr} from={TL.m1In} to={TL.m1End} tapAt={TL.m1Tap} highlight={0} />
           <ChatScreen t={t} tr={tr} />
+          <MenuScreen t={t} tr={tr} from={TL.m2In} to={TL.m2End} tapAt={TL.m2Tap} highlight={2} />
           <ImagesScreen t={t} tr={tr} />
-          <SummaryScreen t={t} tr={tr} />
+          <MenuScreen t={t} tr={tr} from={TL.m3In} to={TL.m3End} tapAt={TL.m3Tap} highlight={1} />
+          <ArticlesScreen t={t} tr={tr} />
         </div>
       </div>
     </div>
@@ -550,7 +482,7 @@ export default function PhoneDemo() {
   const frameRef = useRef(-1);
   const [scale, setScale] = useState(1);
 
-  // Hook de QA: ?demoT=3.2 congela el demo en ese segundo para screenshots.
+  // Hook de QA: ?demoT=13.2 congela el demo en ese segundo para screenshots.
   const forcedT = (() => {
     if (typeof window === 'undefined') return null;
     const v = new URLSearchParams(window.location.search).get('demoT');
@@ -559,8 +491,8 @@ export default function PhoneDemo() {
     return Number.isFinite(n) ? n : null;
   })();
   const frozen = forcedT != null || reduced;
-  // Con reduced-motion: cuadro fijo en el momento del bloqueo (lo más demostrativo).
-  const [t, setT] = useState(forcedT != null ? forcedT : reduced ? 2.6 : 0);
+  // Con reduced-motion: cuadro fijo en el reflow de imágenes (lo más demostrativo).
+  const [t, setT] = useState(forcedT != null ? forcedT : reduced ? 14.4 : 0);
 
   useEffect(() => {
     const el = wrapRef.current;

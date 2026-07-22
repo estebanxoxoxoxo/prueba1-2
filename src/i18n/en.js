@@ -219,37 +219,29 @@ export default {
     nav: ["Home", "History", "Saved", "Settings"],
 
     captions: [
-      "Search for anything.",
-      "Smarty analyzes every result, in real time.",
-      "It blocks the inappropriate before it appears.",
-      "Your child only sees the good.",
+      "A complete space, built for them.",
       "Ask anything, without fear.",
       "Answers for their age, always moderated.",
-      "Even images — only what's appropriate gets through.",
-      "They learn about everything. You, at ease.",
+      "And whatever they search, it moderates.",
+      "It analyzes every image and blocks the inappropriate.",
+      "It reshuffles and keeps only the good.",
+      "Explore any topic. Every article, already reviewed.",
+      "All the knowledge, with none of the bad.",
     ],
 
-    // Ch. 1 — Search videos + live moderation
-    videos: {
-      searchQuery: "dinosaurs 🦕",
-      reviewed: "Reviewed",
-      blocked: "Blocked",
-      blockedTag: "Blocked",
-      reasons: { violent: "Violent", clickbait: "Clickbait", ads: "Ad" },
-      good: [
-        { title: "The world of dinosaurs", channel: "Veritasium" },
-        { title: "How did dinosaurs live?", channel: "Smile and Learn" },
-        { title: "Dinosaurs for kids", channel: "Kurzgesagt" },
+    // Menu (home screen)
+    home: {
+      greeting: "Hi, Alex",
+      prompt: "What do you want to discover today?",
+      opts: [
+        { t: "Chat", s: "Talk to Smarty about anything" },
+        { t: "Search content", s: "Articles and info from the web" },
+        { t: "Search images", s: "Explore safe images" },
+        { t: "Search videos", s: "Moderated videos on anything" },
       ],
     },
-    player: {
-      playing: "Now playing",
-      title: "The world of dinosaurs",
-      metaViews: "1.4M views",
-      approved: "Reviewed and approved by Smarty",
-    },
 
-    // Ch. 2 — A chat that teaches
+    // A chat that teaches
     chat: {
       title: "Chat with Smarty",
       moderated: "Moderated conversation",
@@ -260,23 +252,26 @@ export default {
       inputPlaceholder: "Type your message…",
     },
 
-    // Ch. 3 — Search images (visual moderation)
+    // Search images (visual moderation + reflow)
     images: {
       searchQuery: "dinosaurs",
-      reason: "Not allowed",
+      reasons: { age: "Not allowed", violent: "Violent" },
       reviewed: "9 reviewed",
-      blocked: "1 blocked",
+      blocked: "2 blocked",
     },
 
-    // Ch. 4 — Close: peace of mind for parents
-    summary: {
-      title: "Today's summary",
-      learned: "Alex learned today",
-      topics: ["Dinosaurs", "Prehistory", "Planets"],
-      stats: [
-        { n: "0", l: "ads" },
-        { n: "0", l: "strangers" },
-        { n: "100%", l: "moderated" },
+    // Search content (articles: moderation + reflow)
+    articles: {
+      title: "Search content",
+      searchQuery: "the solar system",
+      reason: "Not allowed",
+      reviewed: "12 reviewed",
+      blocked: "1 blocked",
+      list: [
+        { title: "The solar system explained for kids", source: "Smile and Learn" },
+        { title: "How many planets are there?", source: "National Geographic Kids" },
+        { title: "Stars and galaxies", source: "BBC" },
+        { title: "A journey to the center of the Sun", source: "Kids Encyclopedia" },
       ],
     },
   },
