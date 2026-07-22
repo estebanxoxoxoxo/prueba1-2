@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { UserCheckIcon, CheckIcon } from './icons';
-import { registerWithGoogle, preloadGoogle } from '../registerWithGoogle';
+import { registerWithGoogle, preloadGoogle, REGISTERED_EVENT } from '../registerWithGoogle';
 
-// Botón "Registrarse": abre el registro con Google (popup), verifica el token
-// en el servidor y guarda el usuario real en Firestore. Sin popup propio.
+// Botón "Registrarse": abre el registro con Google (popup, con fallback a
+// redirect si el navegador bloquea el popup), verifica el token en el
+// servidor y guarda el usuario real en Firestore.
 export default function RegisterButton({ children = 'Registrarse', className = '', source = 'cta' }) {
   const [status, setStatus] = useState('idle'); // idle | loading | done
+
+  // El registro puede completarse recién al volver de signInWithRedirect,
+  // en cuyo caso lo dispara App vía completeRedirectSignIn(), no este botón.
+  useEffect(() => {
+    const onRegistered = () => setStatus('done');
+    window.addEventListener(REGISTERED_EVENT, onRegistered);
+    return () => window.removeEventListener(REGISTERED_EVENT, onRegistered);
+  }, []);
 
   // Precarga Firebase al mostrar intención → el popup abre sin trabas.
   const onIntent = () => {
@@ -26,8 +35,10 @@ export default function RegisterButton({ children = 'Registrarse', className = '
 
     setStatus('loading');
     try {
-      await registerWithGoogle(source);
-      setStatus('done');
+      const result = await registerWithGoogle(source);
+      // Si result es null, estamos siendo redirigidos a Google: la página
+      // está navegando, así que se queda en "loading" hasta que se vaya.
+      if (result) setStatus('done');
     } catch {
       // Popup cerrado/cancelado o error → volver a permitir el intento.
       setStatus('idle');

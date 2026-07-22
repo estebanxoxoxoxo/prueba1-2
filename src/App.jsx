@@ -24,6 +24,7 @@ import {
 } from './components/icons';
 import { sendMetaEvent } from './metaEventSender';
 import { MetaEvent } from './metaEventsTypes';
+import { completeRedirectSignIn } from './registerWithGoogle';
 
 const NCES_URL = 'https://nces.ed.gov/programs/coe/indicator/tgk';
 
@@ -504,6 +505,12 @@ export default function App() {
     fbq('track', 'ViewContent', {}, { eventID: eventId });
 
     sendMetaEvent(MetaEvent.ViewContent, eventId);
+  }, []);
+
+  // Completa el registro si volvimos de un signInWithRedirect (fallback
+  // cuando el navegador bloqueó el popup de Google).
+  useEffect(() => {
+    completeRedirectSignIn().catch(() => {});
   }, []);
 
   return (
