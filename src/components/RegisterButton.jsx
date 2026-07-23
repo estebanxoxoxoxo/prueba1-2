@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { UserCheckIcon, CheckIcon } from './icons';
-import { registerWithGoogle, preloadGoogle, logFailedLead, REGISTERED_EVENT } from '../registerWithGoogle';
+import { registerWithGoogle, preloadGoogle, startRegisterAttempt, logFailedLead, REGISTERED_EVENT } from '../registerWithGoogle';
 import { useT } from '../i18n/core';
 
 // Botón "Registrarse": abre el registro con Google (popup, con fallback a
@@ -25,6 +25,11 @@ export default function RegisterButton({ children, className = '', source = 'cta
 
   const onClick = async () => {
     if (status !== 'idle') return;
+
+    // "Empezó" el registro → failedLeads con reason "started" (keepalive, así
+    // se captura aunque cierre la pestaña). Se borra si completa; se actualiza
+    // con el motivo si falla.
+    startRegisterAttempt(source);
 
     setStatus('loading');
     try {

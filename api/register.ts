@@ -54,6 +54,7 @@ export default async function handler(req: any, res: any) {
   try {
     const body = req.body || {};
     const source = typeof body.source === "string" ? body.source : "unknown";
+    const attemptId = typeof body.attemptId === "string" ? body.attemptId : null;
 
     // Datos que manda el cliente (el usuario YA está autenticado por Google en
     // el navegador). Se usan como respaldo si la verificación server-side falla.
@@ -96,6 +97,12 @@ export default async function handler(req: any, res: any) {
     // Upsert por uid (o email) → no duplica si el mismo usuario se registra otra vez.
     const docId = String(uid || email);
     await getDb().collection("leads").doc(docId).set(lead, { merge: true });
+
+    // Completó → sacamos el intento "started"/fallido de failedLeads (queda solo
+    // en `leads`).
+    if (attemptId) {
+      await getDb().collection("failedLeads").doc(attemptId).delete().catch(() => {});
+    }
 
     return res
       .status(200)

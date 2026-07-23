@@ -18,21 +18,62 @@ const POPUP_FALLBACK_CODES = new Set([
   'auth/operation-not-supported-in-this-environment',
 ]);
 
-// Log a `failedLeads` cuando el usuario tocó "Registrarse" pero NO terminó el
-// proceso (cerró/canceló el popup, falló la precarga, verificación fallida,
-// etc.). Fire-and-forget.
-export function logFailedLead(source, err) {
+// ---- Tracking del intento: capturar "empezó y no terminó" aunque cierren la
+// pestaña. Un mismo `attemptId` se upsertea en failedLeads (started → motivo
+// real) y /api/register lo borra si el registro completa. ----
+let currentAttemptId = null;
+const ATTEMPT_KEY = 'smarty_register_attempt';
+
+function newId() {
+  return typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+function getAttemptId() {
+  if (currentAttemptId) return currentAttemptId;
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    return window.sessionStorage.getItem(ATTEMPT_KEY) || null;
+  }
+  return null;
+}
+function clearAttempt() {
+  currentAttemptId = null;
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    window.sessionStorage.removeItem(ATTEMPT_KEY);
+  }
+}
+function postFailedLead(body, keepalive) {
   if (typeof fetch !== 'function') return;
   fetch('/api/failed-lead', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      source,
-      reason: err?.code || 'unknown',
-      message: err?.message || null,
-      email: err?.email || null,
-    }),
+    body: JSON.stringify(body),
+    keepalive: !!keepalive,
   }).catch(() => {});
+}
+
+// Apenas se toca "Registrarse": crea el failedLead con reason "started"
+// (keepalive → llega aunque cierren la pestaña al instante). Se borra si el
+// registro completa; se actualiza con el motivo si falla explícito.
+export function startRegisterAttempt(source = 'cta') {
+  const attemptId = newId();
+  currentAttemptId = attemptId;
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    window.sessionStorage.setItem(ATTEMPT_KEY, attemptId);
+  }
+  postFailedLead({ attemptId, source, reason: 'started' }, true);
+  return attemptId;
+}
+
+// Actualiza el failedLead del intento actual con el motivo real del error.
+export function logFailedLead(source, err) {
+  postFailedLead({
+    attemptId: getAttemptId() || undefined,
+    source,
+    reason: err?.code || 'unknown',
+    message: err?.message || null,
+    email: err?.email || null,
+  });
 }
 
 export function preloadGoogle() {
@@ -103,6 +144,7 @@ async function finishSignIn(user, source) {
       body: JSON.stringify({
         idToken,
         source,
+        attemptId: getAttemptId(),
         uid: user.uid,
         email: user.email,
         name: user.displayName,
@@ -116,6 +158,9 @@ async function finishSignIn(user, source) {
         message: `HTTP ${reg.status} ${detail}`.slice(0, 300),
         email: user.email || null,
       });
+    } else {
+      // Completó → el server ya borró el intento de failedLeads; limpiamos acá.
+      clearAttempt();
     }
   } catch (err) {
     logFailedLead(source, {
