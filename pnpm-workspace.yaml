@@ -1,0 +1,10 @@
+# Solo instalar versiones publicadas hace al menos 6 meses (259200 minutos).
+# Evita versiones recién salidas / con bugs; prioriza estabilidad.
+minimumReleaseAge: 259200
+
+# Scripts de post-instalación permitidos (pnpm los bloquea por defecto):
+# esbuild baja su binario de plataforma; firebase/protobufjs compilan.
+allowBuilds:
+  esbuild: true
+  '@firebase/util': true
+  protobufjs: true
