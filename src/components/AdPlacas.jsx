@@ -3,36 +3,22 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import Owl from './Owl';
 
 /* ============================================================
-   Placas animadas para Facebook Ads (React + Motion).
-   Una placa por línea del guion. Auto-play en loop, ritmo de
-   lectura, estilo "stories". Ruta: /placas
+   Placas animadas para Facebook Ads (React + Motion) — inglés,
+   9:16 centrado. Auto-play en loop, una placa por línea.
+   Ruta: /placas
    ============================================================ */
 
-// Cada placa: segmentos de texto (m: true = palabra/frase destacada) + ms en
-// pantalla. La última es la placa CTA.
+// Cada placa: segmentos de texto (m: true = destacado) + ms en pantalla.
 const PLACAS = [
-  {
-    seg: [{ t: 'Tu hijo en internet ve lo que ' }, { t: 'el algoritmo', m: 1 }, { t: ' quiere que vea' }],
-    ms: 3600,
-  },
-  { seg: [{ t: 'Y eso tiene ' }, { t: 'un precio', m: 1 }, { t: ' para vos' }], ms: 2900 },
-  { seg: [{ t: 'La pregunta no es ' }, { t: 'si', m: 1 }, { t: ' lo vas a pagar' }], ms: 3000 },
-  {
-    seg: [{ t: 'La pregunta es si lo vas a hacer con ' }, { t: 'la integridad de tu hijo', m: 1 }],
-    ms: 4200,
-  },
-  {
-    seg: [
-      { t: 'O con una solución que ' },
-      { t: 'bloquea el algoritmo basura', m: 1 },
-      { t: ' y te permite ' },
-      { t: 'diseñar tu propio algoritmo', m: 1 },
-    ],
-    ms: 5000,
-  },
-  { seg: [{ t: 'Los dueños del algoritmo tienen ' }, { t: 'su propia agenda', m: 1 }], ms: 3200 },
-  { seg: [{ t: 'Y no es una agenda que quieras para tu hijo' }], ms: 3300 },
-  { seg: [{ t: 'Solo ' }, { t: 'vos', m: 1 }, { t: ' sabés lo que querés para tu hijo' }], ms: 3500 },
+  { seg: [{ t: "On the internet, your child sees what " }, { t: "the algorithm", m: 1 }, { t: " wants them to see" }], ms: 3900 },
+  { seg: [{ t: "And that comes at " }, { t: "a price", m: 1 }, { t: " for you" }], ms: 2900 },
+  { seg: [{ t: "The question isn't " }, { t: "whether", m: 1 }, { t: " you'll pay it" }], ms: 3000 },
+  { seg: [{ t: "The question is whether you'll pay it with " }, { t: "your child's integrity", m: 1 }], ms: 4200 },
+  { seg: [{ t: "Or with a solution that " }, { t: "blocks the garbage algorithm", m: 1 }], ms: 3700 },
+  { seg: [{ t: "And lets you " }, { t: "design your own algorithm", m: 1 }], ms: 3700 },
+  { seg: [{ t: "The owners of the algorithm have " }, { t: "their own agenda", m: 1 }], ms: 3300 },
+  { seg: [{ t: "And it's not an agenda you want for your child" }], ms: 3400 },
+  { seg: [{ t: "Only " }, { t: "you", m: 1 }, { t: " know what you want for your child" }], ms: 3500 },
   { cta: true, ms: 5000 },
 ];
 
@@ -84,91 +70,75 @@ export default function AdPlacas() {
       : reduced
         ? { opacity: 0 }
         : { opacity: 0, y: 26, filter: 'blur(8px)' },
-    animate: {
-      opacity: 1,
-      y: 0,
-      filter: 'blur(0px)',
-      transition: { duration: still ? 0 : 0.55, ease: EASE },
-    },
+    animate: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: still ? 0 : 0.55, ease: EASE } },
   };
 
   return (
     <div className="placas-root">
-      {/* Glows ambiente que derivan lento */}
-      <motion.div
-        className="placas-glow placas-glow-a"
-        animate={reduced ? undefined : { x: [0, 40, -20, 0], y: [0, -30, 20, 0] }}
-        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="placas-glow placas-glow-b"
-        animate={reduced ? undefined : { x: [0, -30, 25, 0], y: [0, 25, -20, 0] }}
-        transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      {/* Marco 9:16 centrado (con letterbox si la ventana no es 9:16) */}
+      <div className="placas-frame">
+        {/* Glows ambiente que derivan lento */}
+        <motion.div
+          className="placas-glow placas-glow-a"
+          animate={reduced ? undefined : { x: ['0%', '18%', '-8%', '0%'], y: ['0%', '-12%', '8%', '0%'] }}
+          transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="placas-glow placas-glow-b"
+          animate={reduced ? undefined : { x: ['0%', '-14%', '10%', '0%'], y: ['0%', '10%', '-8%', '0%'] }}
+          transition={{ duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+        />
 
-      {/* Barra de progreso estilo stories */}
-      <div className="placas-progress">
-        {PLACAS.map((_, idx) => (
-          <div key={idx} className="placas-seg">
-            <motion.div
-              className="placas-seg-fill"
-              initial={false}
-              animate={{ width: idx < i ? '100%' : idx === i ? '100%' : '0%' }}
-              transition={{ duration: idx === i ? PLACAS[i].ms / 1000 : 0.25, ease: 'linear' }}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Contenido */}
-      <div className="placas-stage">
-        <AnimatePresence mode="wait">
-          {placa.cta ? (
-            <motion.div
-              key="cta"
-              className="placas-cta"
-              initial={still ? false : reduced ? { opacity: 0 } : { opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1, transition: { duration: 0.6, ease: EASE } }}
-              exit={{ opacity: 0, transition: { duration: 0.35 } }}
-            >
-              <Owl className="placas-owl" />
-              <div className="placas-cta-title">
-                Probanos <span className="placas-mark-teal">sin cargo</span>
-              </div>
-              <div className="placas-cta-btn">Registrate gratis</div>
-              <div className="placas-brand-big">
-                <span className="placas-spark">✦</span> Smarty
-              </div>
-            </motion.div>
-          ) : (
-            <motion.p
-              key={i}
-              className="placas-text"
-              variants={container}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              {toWords(placa.seg).map((w, j) => (
-                <motion.span
-                  key={j}
-                  variants={wordV}
-                  className={w.mark ? 'placas-word placas-mark' : 'placas-word'}
-                >
-                  {w.text}
-                </motion.span>
-              ))}
-            </motion.p>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Marca fija (excepto en la placa CTA que tiene la suya) */}
-      {!placa.cta && (
-        <div className="placas-brand">
-          <span className="placas-spark">✦</span> Smarty
+        {/* Contenido */}
+        <div className="placas-stage">
+          <AnimatePresence mode="wait">
+            {placa.cta ? (
+              <motion.div
+                key="cta"
+                className="placas-cta"
+                initial={still ? false : reduced ? { opacity: 0 } : { opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1, transition: { duration: 0.6, ease: EASE } }}
+                exit={{ opacity: 0, transition: { duration: 0.35 } }}
+              >
+                <Owl className="placas-owl" />
+                <div className="placas-cta-title">
+                  Try it <span className="placas-mark-teal">free</span>
+                </div>
+                <div className="placas-cta-btn">Get started free</div>
+                <div className="placas-brand-big">
+                  <span className="placas-spark">✦</span> Smarty
+                </div>
+              </motion.div>
+            ) : (
+              <motion.p
+                key={i}
+                className="placas-text"
+                variants={container}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                {toWords(placa.seg).map((w, j) => (
+                  <motion.span
+                    key={j}
+                    variants={wordV}
+                    className={w.mark ? 'placas-word placas-mark' : 'placas-word'}
+                  >
+                    {w.text}
+                  </motion.span>
+                ))}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
-      )}
+
+        {/* Marca fija (excepto en la placa CTA que tiene la suya) */}
+        {!placa.cta && (
+          <div className="placas-brand">
+            <span className="placas-spark">✦</span> Smarty
+          </div>
+        )}
+      </div>
     </div>
   );
 }

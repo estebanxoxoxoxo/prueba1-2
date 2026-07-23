@@ -1423,79 +1423,64 @@ h1, h2, h3, h4 {
 }
 
 /* ============================================================
-   PLACAS PARA ADS (/placas) — secuencia animada estilo stories
+   PLACAS PARA ADS (/placas) — 9:16 centrado, animado (Motion)
    ============================================================ */
 .placas-root {
   position: fixed;
   inset: 0;
+  background: #05030f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--sans);
+}
+.placas-frame {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  height: 100vh;
+  max-width: 100vw;
   overflow: hidden;
+  container-type: size;
+  color: #fff;
   background:
     radial-gradient(120% 90% at 50% 8%, #211a52 0%, transparent 60%),
     linear-gradient(180deg, #171045 0%, #0e0930 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--sans);
-  color: #fff;
-  isolation: isolate;
 }
 .placas-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
+  filter: blur(60px);
   opacity: 0.5;
   z-index: 0;
   pointer-events: none;
 }
 .placas-glow-a {
-  width: 62vmin;
-  height: 62vmin;
-  top: -14vmin;
-  left: -10vmin;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.75), transparent 68%);
+  width: 90%;
+  height: 50%;
+  top: -8%;
+  left: -20%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.8), transparent 68%);
 }
 .placas-glow-b {
-  width: 60vmin;
-  height: 60vmin;
-  bottom: -16vmin;
-  right: -12vmin;
-  background: radial-gradient(circle, rgba(20, 184, 166, 0.6), transparent 68%);
-}
-
-.placas-progress {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  gap: 6px;
-  padding: 18px 20px;
-  z-index: 10;
-}
-.placas-seg {
-  flex: 1;
-  height: 4px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.22);
-  overflow: hidden;
-}
-.placas-seg-fill {
-  height: 100%;
-  width: 0;
-  border-radius: 4px;
-  background: #fff;
+  width: 85%;
+  height: 48%;
+  bottom: -10%;
+  right: -20%;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.62), transparent 68%);
 }
 
 .placas-stage {
   position: relative;
   z-index: 2;
-  width: min(90vw, 640px);
-  padding: 0 6vw;
+  width: 86%;
   text-align: center;
 }
 .placas-text {
   font-weight: 900;
-  font-size: clamp(34px, 7.4vmin, 62px);
+  font-size: 7.4cqw;
   line-height: 1.16;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -1511,9 +1496,7 @@ h1, h2, h3, h4 {
   -webkit-background-clip: text;
   background-clip: text;
 }
-.placas-mark-teal {
-  color: #2dd4bf;
-}
+.placas-mark-teal { color: #2dd4bf; }
 
 /* Placa CTA */
 .placas-cta {
@@ -1525,44 +1508,44 @@ h1, h2, h3, h4 {
   text-align: center;
 }
 .placas-owl {
-  width: clamp(84px, 16vmin, 128px);
-  height: clamp(84px, 16vmin, 128px);
+  width: 26cqw;
+  height: 26cqw;
   filter: drop-shadow(0 12px 30px rgba(139, 92, 246, 0.45));
 }
 .placas-cta-title {
-  margin-top: 22px;
+  margin-top: 5cqw;
   font-weight: 900;
-  font-size: clamp(38px, 9vmin, 74px);
+  font-size: 10cqw;
   line-height: 1.05;
   letter-spacing: -0.03em;
 }
 .placas-cta-btn {
-  margin-top: 26px;
-  padding: 15px 30px;
+  margin-top: 6cqw;
+  padding: 3.2cqw 6.4cqw;
   border-radius: 999px;
   font-weight: 800;
-  font-size: clamp(16px, 3.4vmin, 22px);
+  font-size: 4cqw;
   color: #fff;
   background: linear-gradient(135deg, var(--cta-1), var(--cta-2));
   box-shadow: 0 16px 34px rgba(251, 75, 42, 0.45);
 }
 .placas-brand-big {
-  margin-top: 22px;
+  margin-top: 5cqw;
   font-weight: 900;
-  font-size: clamp(20px, 4vmin, 28px);
+  font-size: 4.6cqw;
   color: #c8bff2;
   letter-spacing: -0.01em;
 }
 
 .placas-brand {
   position: absolute;
-  bottom: 26px;
+  bottom: 5cqw;
   left: 0;
   right: 0;
   text-align: center;
   z-index: 3;
   font-weight: 900;
-  font-size: clamp(15px, 2.6vmin, 20px);
+  font-size: 3.4cqw;
   color: rgba(255, 255, 255, 0.66);
   letter-spacing: -0.01em;
 }
