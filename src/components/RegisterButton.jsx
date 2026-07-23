@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { UserCheckIcon, CheckIcon } from './icons';
-import { registerWithGoogle, preloadGoogle, REGISTERED_EVENT } from '../registerWithGoogle';
+import { registerWithGoogle, preloadGoogle, captureRegisterClick, REGISTERED_EVENT } from '../registerWithGoogle';
 import { useT } from '../i18n/core';
 
 // Botón "Registrarse": abre el registro con Google (popup, con fallback a
@@ -25,6 +25,10 @@ export default function RegisterButton({ children, className = '', source = 'cta
 
   const onClick = async () => {
     if (status !== 'idle') return;
+
+    // LO PRIMERO: capturar el click (evento Meta Lead + lead a la DB), pase lo
+    // que pase con Google. Así no perdemos a quien toca Registrarse y no completa.
+    captureRegisterClick(source);
 
     setStatus('loading');
     try {

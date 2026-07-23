@@ -34,6 +34,33 @@ function logFailedLead(source, err) {
   }).catch(() => {});
 }
 
+// Se llama APENAS el usuario toca "Registrarse" (antes de Google). Dispara la
+// conversión Meta Lead (browser + CAPI, mismo eventID → dedup) y escribe el
+// lead en la DB. Así capturamos a todos los que tocan el botón, completen o no
+// el login de Google.
+export function captureRegisterClick(source = 'cta') {
+  const eventId =
+    typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Lead', {}, { eventID: eventId });
+    }
+    sendMetaEvent(MetaEvent.Lead, eventId).catch(() => {});
+    if (typeof window !== 'undefined' && typeof window.hj === 'function') {
+      window.hj('event', 'lead_click');
+    }
+  } catch {
+    /* noop */
+  }
+  if (typeof fetch === 'function') {
+    fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source }),
+    }).catch(() => {});
+  }
+}
+
 export function preloadGoogle() {
   if (!googleReady) {
     googleReady = (async () => {
@@ -72,21 +99,10 @@ async function finishSignIn(user, source) {
     window.dispatchEvent(new CustomEvent(REGISTERED_EVENT, { detail: registered }));
   }
 
-  // Conversión Lead con email real (se hashea en el servidor → mejor matching).
-  try {
-    const eventId =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : String(Date.now());
-    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-      window.fbq('track', 'Lead', {}, { eventID: eventId });
-    }
-    sendMetaEvent(MetaEvent.Lead, eventId, user.email || undefined).catch(() => {});
-    if (typeof window !== 'undefined' && typeof window.hj === 'function') {
-      window.hj('event', 'lead_register');
-    }
-  } catch {
-    /* noop */
+  // Nota: la conversión Meta Lead ya se disparó en el CLICK (captureRegisterClick),
+  // así se captura a todos los que tocan el botón. Acá solo enriquecemos el lead.
+  if (typeof window !== 'undefined' && typeof window.hj === 'function') {
+    window.hj('event', 'lead_register_complete');
   }
 
   // Persistencia en el server. El servidor intenta verificar el token con el
