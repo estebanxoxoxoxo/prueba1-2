@@ -13,12 +13,12 @@ const PLACAS = [
   { seg: [{ t: "On the internet, your child sees what " }, { t: "the algorithm", m: 1 }, { t: " wants them to see" }], ms: 3900 },
   { seg: [{ t: "And that comes at " }, { t: "a price", m: 1 }, { t: " for you" }], ms: 2900 },
   { seg: [{ t: "The question isn't " }, { t: "whether", m: 1 }, { t: " you'll pay it" }], ms: 3000 },
-  { seg: [{ t: "The question is whether you'll pay it with " }, { t: "your child's integrity", m: 1 }], ms: 4200 },
-  { seg: [{ t: "Or with a solution that " }, { t: "blocks the garbage algorithm", m: 1 }], ms: 3700 },
+  { seg: [{ t: "The question is whether you'll pay it with " }, { t: "your child's integrity", m: 1 }], ms: 4400 },
+  { seg: [{ t: "Or with a solution that " }, { t: "blocks the garbage algorithm", m: 1 }], ms: 3900 },
   { seg: [{ t: "And lets you " }, { t: "design your own algorithm", m: 1 }], ms: 3700 },
-  { seg: [{ t: "The owners of the algorithm have " }, { t: "their own agenda", m: 1 }], ms: 3300 },
-  { seg: [{ t: "And it's not an agenda you want for your child" }], ms: 3400 },
-  { seg: [{ t: "Only " }, { t: "you", m: 1 }, { t: " know what you want for your child" }], ms: 3500 },
+  { seg: [{ t: "The owners of the algorithm have " }, { t: "their own agenda", m: 1 }], ms: 3500 },
+  { seg: [{ t: "And it's not an agenda you want for your child" }], ms: 3700 },
+  { seg: [{ t: "Only " }, { t: "you", m: 1 }, { t: " know what you want for your child" }], ms: 3800 },
   { cta: true, ms: 5000 },
 ];
 
@@ -44,7 +44,8 @@ function forcedIndex() {
   return Number.isInteger(n) ? Math.max(0, Math.min(PLACAS.length - 1, n)) : null;
 }
 
-export default function AdPlacas() {
+// aspect: '916' (9:16, default) | '11' (1:1)
+export default function AdPlacas({ aspect = '916' }) {
   const reduced = useReducedMotion();
   const forced = forcedIndex();
   const still = forced != null; // QA: render sin animación de entrada
@@ -75,8 +76,8 @@ export default function AdPlacas() {
 
   return (
     <div className="placas-root">
-      {/* Marco 9:16 centrado (con letterbox si la ventana no es 9:16) */}
-      <div className="placas-frame">
+      {/* Marco centrado (9:16 o 1:1) con letterbox si la ventana no coincide */}
+      <div className={`placas-frame ${aspect === '11' ? 'is-11' : 'is-916'}`}>
         {/* Glows ambiente que derivan lento */}
         <motion.div
           className="placas-glow placas-glow-a"
