@@ -52,15 +52,31 @@ function postFailedLead(body, keepalive) {
   }).catch(() => {});
 }
 
-// Apenas se toca "Registrarse": crea el failedLead con reason "started"
-// (keepalive → llega aunque cierren la pestaña al instante). Se borra si el
-// registro completa; se actualiza con el motivo si falla explícito.
+// Apenas se toca "Registrarse":
+//   1) Dispara la conversión Meta Lead (browser fbq + servidor/CAPI, mismo
+//      eventID = attemptId → dedup). SIN datos de Google a propósito: la
+//      estrategia es captar a TODOS los que tocan el botón.
+//   2) Crea el failedLead con reason "started" (keepalive → llega aunque
+//      cierren la pestaña). Se borra si completa; se actualiza si falla.
 export function startRegisterAttempt(source = 'cta') {
   const attemptId = newId();
   currentAttemptId = attemptId;
   if (typeof window !== 'undefined' && window.sessionStorage) {
     window.sessionStorage.setItem(ATTEMPT_KEY, attemptId);
   }
+
+  try {
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Lead', {}, { eventID: attemptId });
+    }
+    sendMetaEvent(MetaEvent.Lead, attemptId).catch(() => {});
+    if (typeof window !== 'undefined' && typeof window.hj === 'function') {
+      window.hj('event', 'lead_click');
+    }
+  } catch {
+    /* noop */
+  }
+
   postFailedLead({ attemptId, source, reason: 'started' }, true);
   return attemptId;
 }
@@ -114,22 +130,10 @@ async function finishSignIn(user, source) {
     window.dispatchEvent(new CustomEvent(REGISTERED_EVENT, { detail: registered }));
   }
 
-  // Conversión Meta Lead (SOLO en éxito): browser fbq + CAPI con el mismo
-  // eventID (dedup), con el email real para mejor matching.
-  try {
-    const eventId =
-      typeof crypto !== 'undefined' && crypto.randomUUID
-        ? crypto.randomUUID()
-        : String(Date.now());
-    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-      window.fbq('track', 'Lead', {}, { eventID: eventId });
-    }
-    sendMetaEvent(MetaEvent.Lead, eventId, user.email || undefined).catch(() => {});
-    if (typeof window !== 'undefined' && typeof window.hj === 'function') {
-      window.hj('event', 'lead_register');
-    }
-  } catch {
-    /* noop */
+  // La conversión Meta Lead ya se disparó en el CLICK (startRegisterAttempt),
+  // para captar a todos. Acá el registro completó: solo marcamos el funnel.
+  if (typeof window !== 'undefined' && typeof window.hj === 'function') {
+    window.hj('event', 'lead_register_complete');
   }
 
   // Persistencia en el server. El servidor intenta verificar el token con el
