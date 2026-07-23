@@ -197,6 +197,8 @@ export default {
     tag: 'Un entorno seguro para que los chicos de 6 a 13 años aprendan de todo lo bueno de internet, sin nada de lo malo.',
     dataPrefix: 'Dato: 80% — ',
     dataLink: 'NCES, Condition of Education (2019)',
+    privacy: 'Privacidad',
+    terms: 'Términos',
   },
 
   register: {

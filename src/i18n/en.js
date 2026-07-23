@@ -196,6 +196,8 @@ export default {
     tag: "A safe space for kids ages 6 to 13 to learn from everything good about the internet, with none of the bad.",
     dataPrefix: "Data: 80% — ",
     dataLink: "NCES, Condition of Education (2019)",
+    privacy: "Privacy",
+    terms: "Terms",
   },
 
   register: {

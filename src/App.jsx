@@ -388,6 +388,11 @@ function Footer() {
               {t.footer.dataLink}
             </a>
           </span>
+          <span>
+            <a href="/privacy.html">{t.footer.privacy}</a>
+            {' · '}
+            <a href="/terms.html">{t.footer.terms}</a>
+          </span>
         </div>
       </div>
     </footer>
