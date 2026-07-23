@@ -19,8 +19,9 @@ const POPUP_FALLBACK_CODES = new Set([
 ]);
 
 // Log a `failedLeads` cuando el usuario tocó "Registrarse" pero NO terminó el
-// proceso (cerró/canceló el popup, verificación fallida, etc.). Fire-and-forget.
-function logFailedLead(source, err) {
+// proceso (cerró/canceló el popup, falló la precarga, verificación fallida,
+// etc.). Fire-and-forget.
+export function logFailedLead(source, err) {
   if (typeof fetch !== 'function') return;
   fetch('/api/failed-lead', {
     method: 'POST',
@@ -32,33 +33,6 @@ function logFailedLead(source, err) {
       email: err?.email || null,
     }),
   }).catch(() => {});
-}
-
-// Se llama APENAS el usuario toca "Registrarse" (antes de Google). Dispara la
-// conversión Meta Lead (browser + CAPI, mismo eventID → dedup) y escribe el
-// lead en la DB. Así capturamos a todos los que tocan el botón, completen o no
-// el login de Google.
-export function captureRegisterClick(source = 'cta') {
-  const eventId =
-    typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
-  try {
-    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-      window.fbq('track', 'Lead', {}, { eventID: eventId });
-    }
-    sendMetaEvent(MetaEvent.Lead, eventId).catch(() => {});
-    if (typeof window !== 'undefined' && typeof window.hj === 'function') {
-      window.hj('event', 'lead_click');
-    }
-  } catch {
-    /* noop */
-  }
-  if (typeof fetch === 'function') {
-    fetch('/api/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source }),
-    }).catch(() => {});
-  }
 }
 
 export function preloadGoogle() {
@@ -99,10 +73,22 @@ async function finishSignIn(user, source) {
     window.dispatchEvent(new CustomEvent(REGISTERED_EVENT, { detail: registered }));
   }
 
-  // Nota: la conversión Meta Lead ya se disparó en el CLICK (captureRegisterClick),
-  // así se captura a todos los que tocan el botón. Acá solo enriquecemos el lead.
-  if (typeof window !== 'undefined' && typeof window.hj === 'function') {
-    window.hj('event', 'lead_register_complete');
+  // Conversión Meta Lead (SOLO en éxito): browser fbq + CAPI con el mismo
+  // eventID (dedup), con el email real para mejor matching.
+  try {
+    const eventId =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : String(Date.now());
+    if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+      window.fbq('track', 'Lead', {}, { eventID: eventId });
+    }
+    sendMetaEvent(MetaEvent.Lead, eventId, user.email || undefined).catch(() => {});
+    if (typeof window !== 'undefined' && typeof window.hj === 'function') {
+      window.hj('event', 'lead_register');
+    }
+  } catch {
+    /* noop */
   }
 
   // Persistencia en el server. El servidor intenta verificar el token con el
@@ -170,7 +156,8 @@ export async function registerWithGoogle(source = 'cta') {
       return null; // la página está navegando a Google, no hay más que hacer acá
     }
     // Popup cerrado/cancelado, dominio no autorizado, etc. → no completó.
-    logFailedLead(source, err);
+    // El log a failedLeads lo hace el caller (RegisterButton) para cubrir
+    // CUALQUIER error del flujo, incluida la precarga de Firebase.
     throw err;
   }
 
@@ -196,6 +183,9 @@ export async function completeRedirectSignIn() {
     // eslint-disable-next-line no-console
     console.error('[Registro Google] getRedirectResult falló →', err?.code, '—', err?.message);
     if (typeof window !== 'undefined') window.__googleAuthError = err;
+    const src =
+      (typeof window !== 'undefined' && window.sessionStorage?.getItem(REDIRECT_SOURCE_KEY)) || 'cta';
+    logFailedLead(src, err);
     return null;
   }
   if (!result?.user) return null;
