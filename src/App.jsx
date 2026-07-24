@@ -26,6 +26,8 @@ import {
 } from './components/icons';
 import { sendMetaEvent } from './metaEventSender';
 import { MetaEvent } from './metaEventsTypes';
+import { sendTikTokEvent } from './tiktokEventSender';
+import { TikTokEvent } from './tiktokEventsTypes';
 import { completeRedirectSignIn } from './registerWithGoogle';
 import SuccessModal from './components/SuccessModal';
 
@@ -408,8 +410,14 @@ export default function App() {
 
     fbq('track', 'PageView', {}, { eventID: eventId });
     fbq('track', 'ViewContent', {}, { eventID: eventId });
-
     sendMetaEvent(MetaEvent.ViewContent, eventId);
+
+    // TikTok: el pixel ya hizo ttq.page(); sumamos ViewContent (browser + Events
+    // API, mismo event_id → dedup).
+    if (typeof window !== 'undefined' && window.ttq && typeof window.ttq.track === 'function') {
+      window.ttq.track('ViewContent', {}, { event_id: eventId });
+    }
+    sendTikTokEvent(TikTokEvent.ViewContent, eventId).catch(() => {});
   }, []);
 
   // Completa el registro si volvimos de un signInWithRedirect (fallback

@@ -1,5 +1,7 @@
 import { sendMetaEvent } from './metaEventSender';
 import { MetaEvent } from './metaEventsTypes';
+import { sendTikTokEvent } from './tiktokEventSender';
+import { TikTokEvent } from './tiktokEventsTypes';
 
 // Carga diferida: Firebase (SDK + config) solo se baja cuando el usuario
 // muestra intención (hover/tap del botón), no en cada visita.
@@ -66,10 +68,16 @@ export function startRegisterAttempt(source = 'cta') {
   }
 
   try {
+    // Meta Lead (browser + CAPI)
     if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
       window.fbq('track', 'Lead', {}, { eventID: attemptId });
     }
     sendMetaEvent(MetaEvent.Lead, attemptId).catch(() => {});
+    // TikTok CompleteRegistration (browser pixel + Events API, mismo event_id → dedup)
+    if (typeof window !== 'undefined' && window.ttq && typeof window.ttq.track === 'function') {
+      window.ttq.track('CompleteRegistration', {}, { event_id: attemptId });
+    }
+    sendTikTokEvent(TikTokEvent.CompleteRegistration, attemptId).catch(() => {});
     if (typeof window !== 'undefined' && typeof window.hj === 'function') {
       window.hj('event', 'lead_click');
     }
