@@ -34,13 +34,13 @@ export default async function handler(req: any, res: any) {
       .json({ error: "eventName y eventId son requeridos" });
   }
 
-  // El Pixel ID es público (va en el navegador); el Access Token es SECRETO (env).
-  const pixelId = process.env.TIKTOK_PIXEL_ID || "D9HON73C77U9GBM27EJG";
+  // Ambos desde env vars de Vercel (Pixel ID + Access Token secreto).
+  const pixelId = process.env.TIKTOK_PIXEL_ID;
   const accessToken = process.env.TIKTOK_ACCESS_TOKEN;
-  if (!accessToken) {
+  if (!pixelId || !accessToken) {
     return res
       .status(500)
-      .json({ error: "TIKTOK_ACCESS_TOKEN no está configurada" });
+      .json({ error: "TIKTOK_PIXEL_ID / TIKTOK_ACCESS_TOKEN no están configuradas" });
   }
 
   // ttp (cookie del pixel) y ttclid (clic del ad). Cliente → cookies como fallback.
