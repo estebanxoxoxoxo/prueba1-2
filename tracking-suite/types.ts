@@ -26,7 +26,6 @@ export enum OwnEvent {
   SecondsToInitialScroll = "secondsToInitialScroll",
   ReaderScroll = "readerScroll",
   Seconds = "seconds",
-  // Clasificaciones de sesión (se evalúan al cierre, en sus detectores).
   ActiveSession = "activeSession",
   RelevantSession = "relevantSession",
 }

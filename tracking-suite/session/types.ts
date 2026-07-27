@@ -1,6 +1,6 @@
 // Contratos de la sesión.
 
-import { EventKey, EventValue } from "../events";
+import { EventKey, EventValue } from "../types";
 
 // Señal cruda de un gesto de scroll (ya agrupado con debounce de 150ms).
 export interface ScrollGesture {

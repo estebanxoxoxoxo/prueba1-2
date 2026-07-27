@@ -1,5 +1,5 @@
 import { Detector } from "../types";
-import { OwnEvent } from "../../events";
+import { OwnEvent } from "../../types";
 
 // readerScroll: cuando hay 3 scrolls < 300px dentro de una ventana de 60s (patrón de
 // lectura), reporta el evento y MUERE. Si nunca pasa, no reporta (la key queda ausente).

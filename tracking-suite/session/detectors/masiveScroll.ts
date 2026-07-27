@@ -1,5 +1,5 @@
 import { Detector } from "../types";
-import { OwnEvent } from "../../events";
+import { OwnEvent } from "../../types";
 
 // masiveScroll: por cada gesto > 2000px reporta el evento (fling/skim); el contexto lo cuenta.
 let unsub: (() => void) | null = null;

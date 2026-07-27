@@ -1,5 +1,5 @@
 import { Detector, SessionSources } from "../types";
-import { OwnEvent } from "../../events";
+import { OwnEvent } from "../../types";
 
 // relevantSession: sesión relevante. Se evalúa AL CIERRE (flush) → true si hubo >8
 // scrolls <2000px y >30s. Si no, no reporta (la key queda ausente = false).

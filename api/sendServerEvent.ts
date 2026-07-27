@@ -1,11 +1,14 @@
 import { createHash } from "crypto";
-import { readRequest } from "./utils/readRequest";
+import { readRequest } from "../tracking-suite/utils/readRequest";
 
-// Handler de POST /api/track. TODO el camino del evento server-side a Facebook, en un
-// solo fichero: valida → extrae el request → hashea el contacto → arma el payload de
-// la Conversions API → POST a Graph API. NO escribe en la DB (el evento se cuenta en
+export const config = {
+  runtime: "nodejs",
+};
+
+// Endpoint POST /api/track. TODO el camino del evento server-side a Facebook (CAPI),
+// acá directamente: valida → extrae el request → hashea el contacto → arma el payload
+// de la Conversions API → POST a Graph API. NO escribe en la DB (el evento se cuenta en
 // el doc de sesión, vía /api/session). Mismo eventId que el pixel del navegador → dedup.
-// (readRequest queda como util aparte porque handleSession también lo usa.)
 
 // SHA-256 (hex) para los datos personales (em, ph, external_id).
 function sha256(value: string): string {

@@ -1,5 +1,5 @@
 import { Detector } from "../types";
-import { OwnEvent } from "../../events";
+import { OwnEvent } from "../../types";
 
 // commonScroll: por cada gesto < 2000px reporta el evento; el contexto lo cuenta.
 let unsub: (() => void) | null = null;

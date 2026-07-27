@@ -2,7 +2,7 @@
 // desde el navegador, en sus dos patas (pixel + aviso a nuestro server), y el
 // orquestador pushEvent que las compone y lo reporta al agregado de la sesión.
 
-import { FbEvent } from "./events";
+import { FbEvent } from "./types";
 import { newId, postBeacon, getFbp, getFbc } from "./utils";
 import { report } from "./session";
 
@@ -56,7 +56,7 @@ export interface PushOptions {
   params?: Record<string, unknown>;
 }
 
-export function pushEvent(event: FbEvent, opts: PushOptions = {}): void {
+export function handleEvent(event: FbEvent, opts: PushOptions = {}): void {
   const eventId = opts.eventId || newId();
 
   sendFbBrowserEvent(event, eventId, opts.params); // 1) navegador (pixel)

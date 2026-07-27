@@ -1,5 +1,5 @@
 import { Detector, SessionSources } from "../types";
-import { OwnEvent } from "../../events";
+import { OwnEvent } from "../../types";
 
 // activeSession: sesión con actividad mínima. Se evalúa AL CIERRE (flush), cuando los
 // segundos y el conteo de commonScroll ya son finales → true si hubo ≥1 scroll <2000px

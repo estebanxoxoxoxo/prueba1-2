@@ -24,7 +24,7 @@ import {
 } from "./session/sources/secondsSource";
 import { DETECTORS } from "./session/detectors";
 import { SessionSources } from "./session/types";
-import { EventKey, EventValue, OwnEvent } from "./events";
+import { EventKey, EventValue, OwnEvent } from "./types";
 import { newId, postBeacon, getFbp, getFbc } from "./utils";
 
 // ---------- Agregado: el payload que crece incremental ----------

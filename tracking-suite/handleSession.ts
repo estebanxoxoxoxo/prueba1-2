@@ -2,7 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getDb } from "./utils/db";
 import { sanitizeCampaign } from "./utils/sanitizeCampaign";
 import { readRequest } from "./utils/readRequest";
-import { EVENT_KEYS, EventValue } from "./events";
+import { EVENT_KEYS, EventValue } from "./types";
 
 // Solo aceptamos valores escalares (contador / booleano / null) para las keys conocidas.
 function cleanEventValue(v: unknown): EventValue | undefined {

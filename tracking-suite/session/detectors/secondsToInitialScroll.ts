@@ -1,5 +1,5 @@
 import { Detector } from "../types";
-import { OwnEvent } from "../../events";
+import { OwnEvent } from "../../types";
 
 // secondsToInitialScroll: al PRIMER scroll > 500px reporta los segundos transcurridos
 // y MUERE (se desuscribe). Si nunca pasa, no reporta nada (la key queda ausente).
