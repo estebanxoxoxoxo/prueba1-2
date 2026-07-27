@@ -1,15 +1,14 @@
 import { createHash } from "crypto";
-import { readVercelMetadata } from "../tracking-suite/utils/readVercelMetadata";
 
 export const config = {
   runtime: "nodejs",
 };
 
-// Endpoint POST /api/send-server-event. TODO el camino del evento server-side a Facebook
-// (CAPI), acá directamente: valida → extrae el request → hashea el contacto → arma el
-// payload de la Conversions API → POST a Graph API. NO escribe en la DB (el evento se
-// cuenta en el doc de sesión, vía /api/set-session-in-db). Mismo eventId que el pixel del
-// navegador → dedup.
+// Endpoint POST /api/send-server-event. SELF-CONTAINED (importa solo `crypto`, cero
+// imports relativos a la suite → Vercel lo resuelve sin ERR_MODULE_NOT_FOUND). TODO el
+// camino del evento server-side a Facebook (CAPI): valida → extrae el request → hashea el
+// contacto → arma el payload → POST a Graph API. NO escribe en la DB. Mismo eventId que el
+// pixel del navegador → dedup.
 
 // SHA-256 (hex) para los datos personales (em, ph, external_id).
 function sha256(value: string): string {
@@ -17,7 +16,6 @@ function sha256(value: string): string {
 }
 
 // Normaliza + hashea el contacto (email o teléfono) para el Advanced Matching de Meta.
-// Con "@" → email (trim + minúsculas). Si no → teléfono (solo dígitos).
 function hashContact(raw?: string): { emailHash?: string; phoneHash?: string } {
   const value = typeof raw === "string" ? raw.trim() : "";
   if (!value) return {};
@@ -26,7 +24,22 @@ function hashContact(raw?: string): { emailHash?: string; phoneHash?: string } {
   return digits ? { phoneHash: sha256(digits) } : {};
 }
 
-export default async function sendServerEvent(req: any, res: any) {
+// Contexto del request que necesita la CAPI: ip, user-agent, cookies de Meta, url.
+function readRequest(req: any) {
+  const h = req.headers || {};
+  return {
+    ip: h["x-forwarded-for"] || req.socket?.remoteAddress || undefined,
+    userAgent: h["user-agent"] || undefined,
+    fbp: req.body?.fbp || req.cookies?._fbp || undefined,
+    fbc: req.body?.fbc || req.cookies?._fbc || undefined,
+    eventSourceUrl:
+      req.body?.eventSourceUrl ||
+      h.referer ||
+      (h.host ? `https://${h.host}/` : undefined),
+  };
+}
+
+export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -44,7 +57,7 @@ export default async function sendServerEvent(req: any, res: any) {
       .json({ error: "META_PIXEL_ID / META_ACCESS_TOKEN no están configuradas" });
   }
 
-  const ctx = readVercelMetadata(req);
+  const ctx = readRequest(req);
   const { emailHash, phoneHash } = hashContact(req.body?.contact);
   const externalId = emailHash || phoneHash;
 
@@ -55,13 +68,13 @@ export default async function sendServerEvent(req: any, res: any) {
         event_time: Math.floor(Date.now() / 1000),
         event_id: eventId,
         action_source: "website",
-        event_source_url: ctx.eventSourceUrl ?? undefined,
+        event_source_url: ctx.eventSourceUrl,
         user_data: {
-          client_ip_address: ctx.ip ?? undefined,
-          client_user_agent: ctx.userAgent ?? undefined,
+          client_ip_address: ctx.ip,
+          client_user_agent: ctx.userAgent,
           // fbp (navegador) y fbc (clic del ad) → mejoran matching/atribución.
-          fbp: ctx.fbp ?? undefined,
-          fbc: ctx.fbc ?? undefined,
+          fbp: ctx.fbp,
+          fbc: ctx.fbc,
           // Advanced Matching (hasheado SHA-256). undefined se omite en el JSON.
           em: emailHash ? [emailHash] : undefined,
           ph: phoneHash ? [phoneHash] : undefined,
