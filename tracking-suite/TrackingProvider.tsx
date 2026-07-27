@@ -1,121 +1,148 @@
-// Toda la ORQUESTACIÓN de la sesión en un fichero: el agregado incremental, el armado
-// del payload, y el contexto/Provider que arranca las fuentes + detectores y flushea.
-// Las señales crudas (session/sources/) y los detectores (session/detectors/) viven
-// aparte; acá se cablean.
+// Todo el tracking de sesión en un solo lugar y en React: un useEffect que cuenta
+// gestos de scroll (debounce 150ms) y segundos, mini-lógicas que en cada actualización
+// suman los scrolls por tipo y disparan activeSession/relevantSession, y al cerrar manda
+// el doc a la DB. Las métricas son estado de React.
 
 import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   ReactNode,
 } from "react";
 import { readTrackingParams, TrackingParams } from "./utils/readUrlParams";
-import {
-  startScroll,
-  stopScroll,
-  onGesture,
-  endPendingGesture,
-} from "./session/sources/scrollSource";
-import {
-  startSeconds,
-  stopSeconds,
-  getSeconds,
-} from "./session/sources/secondsSource";
-import { DETECTORS } from "./session/detectors";
-import { SessionSources } from "./session/types";
-import { EventKey, EventValue, OwnEvent } from "./types";
+import { FbEvent } from "./types";
 import { newId, postBeacon, getFbp, getFbc } from "./utils";
 
-// ---------- Agregado: el payload que crece incremental ----------
-// Cada evento (fb vía pushEvent, o propio vía un detector) reporta acá.
-let aggregate: Record<string, EventValue> = {};
-
-// Reporta un evento a la raíz del doc:
-//   - sin `value` → contador (+1): fb events, commonScroll, masiveScroll, readerScroll.
-//   - con `value` → lo setea: secondsToInitialScroll (segundos), seconds (duración).
+// ---------- Eventos de Facebook: contador de módulo ----------
+// pushEvent los dispara de forma imperativa desde cualquier lado (incluso
+// registerWithGoogle, que no es React, y a veces antes de que monte el Provider) → un
+// contador simple siempre disponible. Se mergean al doc en el flush.
+const fbEvents: Record<string, number> = {};
 // eslint-disable-next-line react-refresh/only-export-components
-export function report(key: EventKey, value?: EventValue): void {
-  if (value === undefined) {
-    const current = aggregate[key];
-    aggregate[key] = (typeof current === "number" ? current : 0) + 1;
-  } else {
-    aggregate[key] = value;
-  }
+export function plusEventFrecuency(event: FbEvent): void {
+  fbEvents[event] = (fbEvents[event] || 0) + 1;
 }
 
-// ---------- Snapshot: payload final (datos fijos + agregado) ----------
-function buildPayload(
-  sessionId: string,
-  params: TrackingParams,
-  startedAt: number
-): Record<string, unknown> {
-  return {
-    sessionId,
-    campaign: params.campaign,
-    variant: params.variant,
-    heroVariant: params.heroVariant,
-    sessionStart: startedAt,
-    sessionEnd: Date.now(),
-    fbp: getFbp(),
-    fbc: getFbc(),
-    ...aggregate,
-  };
-}
-
-// ---------- Contexto ----------
+// ---------- Contexto (campaign / variant / heroVariant de la URL) ----------
 const DEFAULTS: TrackingParams = {
   campaign: "default",
   variant: "default",
   heroVariant: "default",
 };
-
 const TrackingContext = createContext<TrackingParams>(DEFAULTS);
-
-// Lo consume cualquier componente para leer campaign/variant/heroVariant.
 // eslint-disable-next-line react-refresh/only-export-components
 export function useTracking(): TrackingParams {
   return useContext(TrackingContext);
 }
 
-// ---------- Provider ----------
+// ---------- Métricas de la sesión (todo estado de React) ----------
+interface Metrics {
+  seconds: number;
+  commonScroll: number; // scrolls < 2000px
+  masiveScroll: number; // scrolls > 2000px
+  secondsToInitialScroll: number | null; // segundos hasta el 1er scroll > 500px
+  readerScroll: boolean; // 3 scrolls < 300px en 60s
+  activeSession: boolean; // seconds >= 5 && commonScroll >= 1
+  relevantSession: boolean; // seconds > 30 && commonScroll > 8
+}
+const INITIAL: Metrics = {
+  seconds: 0,
+  commonScroll: 0,
+  masiveScroll: 0,
+  secondsToInitialScroll: null,
+  readerScroll: false,
+  activeSession: false,
+  relevantSession: false,
+};
+
+// Recalcula las clasificaciones a partir de los valores actuales.
+function classify(m: Metrics): Metrics {
+  return {
+    ...m,
+    activeSession: m.seconds >= 5 && m.commonScroll >= 1,
+    relevantSession: m.seconds > 30 && m.commonScroll > 8,
+  };
+}
+
 export function TrackingProvider({ children }: { children: ReactNode }) {
-  // La URL inicial se lee UNA vez al montar y queda fija en el contexto.
   const [params] = useState<TrackingParams>(() => readTrackingParams());
+  const [metrics, setMetrics] = useState<Metrics>(INITIAL);
 
-  // Fuente 1: cuenta segundos activos de sesión.
-  useEffect(() => {
-    startSeconds();
-    return () => stopSeconds();
-  }, []);
+  // Espejo para leer las métricas al cierre sin closure viejo.
+  const latest = useRef(metrics);
+  latest.current = metrics;
 
-  // Fuente 2: agrupa el gesto de scroll (debounce 150ms) y lo emite.
   useEffect(() => {
-    startScroll();
-    return () => stopScroll();
-  }, []);
-
-  // Detectores + flush. Se les inyecta `report` en las fuentes: cada detector reporta
-  // su evento al agregado. En el cleanup (o al ocultarse/cerrarse la pestaña) se setea
-  // `seconds`, se arma el payload con el agregado y se manda a la DB.
-  useEffect(() => {
-    const sources: SessionSources = {
-      onGesture,
-      getSeconds,
-      report,
-      get: (key) => aggregate[key],
-    };
     const sessionId = newId();
     const startedAt = Date.now();
-    DETECTORS.forEach((d) => d.start(sources));
+    const smallScrolls: number[] = []; // timestamps de scrolls < 300px (para readerScroll)
 
-    const flush = () => {
-      endPendingGesture(); // cierra el gesto en curso para no perder el último
-      report(OwnEvent.Seconds, getSeconds()); // segundos actuales → agregado
-      DETECTORS.forEach((d) => d.flush?.()); // clasificaciones al cierre (activeSession, ...)
-      postBeacon("/api/set-session-in-db", buildPayload(sessionId, params, startedAt));
+    // mini-lógica: un gesto de scroll (delta en px)
+    const onGesture = (delta: number) => {
+      setMetrics((m) => {
+        const next = { ...m };
+        if (delta >= 300 && delta < 2000) next.commonScroll += 1;
+        if (delta > 2000) next.masiveScroll += 1;
+        if (delta > 500 && next.secondsToInitialScroll === null) {
+          next.secondsToInitialScroll = next.seconds;
+        }
+        if (delta < 300) {
+          const now = Date.now();
+          smallScrolls.push(now);
+          while (smallScrolls.length && smallScrolls[0] < now - 60000) {
+            smallScrolls.shift();
+          }
+          if (smallScrolls.length >= 3) next.readerScroll = true;
+        }
+        return classify(next);
+      });
     };
-    // Ocultarse es el momento más confiable en mobile para mandar el snapshot.
+
+    // mini-lógica: pasó un segundo (solo cuenta con la pestaña visible)
+    const onSecond = () => {
+      if (document.visibilityState !== "visible") return;
+      setMetrics((m) => classify({ ...m, seconds: m.seconds + 1 }));
+    };
+
+    // Scroll: agrupa el gesto con debounce de 150ms y llama onGesture(delta).
+    let startY = window.scrollY;
+    let lastY = startY;
+    let inGesture = false;
+    let idle: ReturnType<typeof setTimeout> | null = null;
+    const onScroll = () => {
+      if (!inGesture) {
+        startY = lastY;
+        inGesture = true;
+      }
+      lastY = window.scrollY;
+      if (idle) clearTimeout(idle);
+      idle = setTimeout(() => {
+        inGesture = false;
+        const delta = Math.abs(lastY - startY);
+        if (delta >= 4) onGesture(delta);
+      }, 150);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const timer = setInterval(onSecond, 1000);
+
+    // flush: manda el doc (fijos + eventos fb + métricas) a la DB.
+    const flush = () => {
+      postBeacon("/api/set-session-in-db", {
+        sessionId,
+        campaign: params.campaign,
+        variant: params.variant,
+        heroVariant: params.heroVariant,
+        ...fbEvents,
+        ...latest.current,
+        sessionStart: startedAt,
+        sessionEnd: Date.now(),
+        fbp: getFbp(),
+        fbc: getFbc(),
+      });
+    };
     const onHide = () => {
       if (document.visibilityState === "hidden") flush();
     };
@@ -123,10 +150,12 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     document.addEventListener("visibilitychange", onHide);
 
     return () => {
-      flush(); // respaldo del desmontaje
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("pagehide", flush);
       document.removeEventListener("visibilitychange", onHide);
-      DETECTORS.forEach((d) => d.stop());
+      clearInterval(timer);
+      if (idle) clearTimeout(idle);
+      flush();
     };
   }, [params]);
 

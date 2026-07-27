@@ -17,7 +17,7 @@ export interface RequestContext {
   fbc: string | null;
 }
 
-export function readRequest(req: any): RequestContext {
+export function readVercelMetadata(req: any): RequestContext {
   const h = req.headers || {};
   const city = h["x-vercel-ip-city"];
   return {

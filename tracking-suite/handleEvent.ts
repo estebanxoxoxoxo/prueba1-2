@@ -4,7 +4,7 @@
 
 import { FbEvent } from "./types";
 import { newId, postBeacon, getFbp, getFbc } from "./utils";
-import { report } from "./TrackingProvider";
+import { plusEventFrecuency } from "./TrackingProvider";
 
 // ---- fbq: el PIXEL (navegador → Facebook, directo) ----
 declare global {
@@ -60,7 +60,8 @@ export function handleEvent(event: FbEvent, opts: PushOptions = {}): void {
   const eventId = opts.eventId || newId();
 
   sendFbBrowserEvent(event, eventId, opts.params); // 1) navegador (pixel)
-  report(event); // 2) al agregado de la sesión (+1)
+  
+  plusEventFrecuency(event); // 2) al agregado de la sesión (+1)
 
   if (opts.browserOnly) return;
   sendFbServerEvent({ event, eventId, contact: opts.contact }); // 3) aviso al server (CAPI)
