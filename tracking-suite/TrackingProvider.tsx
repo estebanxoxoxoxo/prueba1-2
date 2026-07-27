@@ -113,7 +113,7 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
       endPendingGesture(); // cierra el gesto en curso para no perder el último
       report(OwnEvent.Seconds, getSeconds()); // segundos actuales → agregado
       DETECTORS.forEach((d) => d.flush?.()); // clasificaciones al cierre (activeSession, ...)
-      postBeacon("/api/session", buildPayload(sessionId, params, startedAt));
+      postBeacon("/api/set-session-in-db", buildPayload(sessionId, params, startedAt));
     };
     // Ocultarse es el momento más confiable en mobile para mandar el snapshot.
     const onHide = () => {

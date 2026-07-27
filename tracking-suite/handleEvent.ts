@@ -4,7 +4,7 @@
 
 import { FbEvent } from "./types";
 import { newId, postBeacon, getFbp, getFbc } from "./utils";
-import { report } from "./session";
+import { report } from "./TrackingProvider";
 
 // ---- fbq: el PIXEL (navegador → Facebook, directo) ----
 declare global {
@@ -23,7 +23,7 @@ export function sendFbBrowserEvent(
   }
 }
 
-// ---- CAPI: aviso a NUESTRO server (navegador → /api/track). Fire-and-forget con
+// ---- CAPI: aviso a NUESTRO server (navegador → /api/send-server-event). Fire-and-forget con
 // postBeacon (sobrevive a la navegación → ideal para el Lead antes del redirect). ----
 export interface FbServerEventInput {
   event: string;
@@ -33,7 +33,7 @@ export interface FbServerEventInput {
 }
 
 export function sendFbServerEvent(input: FbServerEventInput): void {
-  postBeacon("/api/track", {
+  postBeacon("/api/send-server-event", {
     eventName: input.event,
     eventId: input.eventId,
     contact: input.contact,
