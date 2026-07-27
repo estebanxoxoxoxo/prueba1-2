@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import AdPlacas from './components/AdPlacas.jsx'
 import { LanguageProvider } from './i18n/index.jsx'
+import { TrackingProvider } from '../tracking-suite'
 
 // Placas animadas para Facebook Ads:
 //   /placas · /placas/916 · /ads → 9:16
@@ -17,7 +18,15 @@ else if (path === '/placas' || path === '/placas/916' || path === '/ads') placas
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <LanguageProvider>
-      {placasAspect ? <AdPlacas aspect={placasAspect} /> : <App />}
+      {placasAspect ? (
+        <AdPlacas aspect={placasAspect} />
+      ) : (
+        // TrackingProvider solo en la landing: arranca la sesión y la flushea a la
+        // DB al cerrar. Las placas de ads no generan sesión.
+        <TrackingProvider>
+          <App />
+        </TrackingProvider>
+      )}
     </LanguageProvider>
   </StrictMode>,
 )

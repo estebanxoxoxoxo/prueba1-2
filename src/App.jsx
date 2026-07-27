@@ -24,10 +24,7 @@ import {
   SlidersIcon,
   ChevronIcon,
 } from './components/icons';
-import { sendMetaEvent } from './metaEventSender';
-import { MetaEvent } from './metaEventsTypes';
-import { sendTikTokEvent } from './tiktokEventSender';
-import { TikTokEvent } from './tiktokEventsTypes';
+import { pushEvent, FbEvent } from '../tracking-suite';
 import { completeRedirectSignIn } from './registerWithGoogle';
 import SuccessModal from './components/SuccessModal';
 
@@ -406,18 +403,11 @@ export default function App() {
   useReveal();
 
   useEffect(() => {
-    const eventId = crypto.randomUUID();
-
-    fbq('track', 'PageView', {}, { eventID: eventId });
-    fbq('track', 'ViewContent', {}, { eventID: eventId });
-    sendMetaEvent(MetaEvent.ViewContent, eventId);
-
-    // TikTok: el pixel ya hizo ttq.page(); sumamos ViewContent (browser + Events
-    // API, mismo event_id → dedup).
-    if (typeof window !== 'undefined' && window.ttq && typeof window.ttq.track === 'function') {
-      window.ttq.track('ViewContent', {}, { event_id: eventId });
-    }
-    sendTikTokEvent(TikTokEvent.ViewContent, eventId).catch(() => {});
+    // PageView solo en el navegador (parity con el pixel base). ViewContent en
+    // navegador + Conversions API (mismo eventId → dedup) y queda registrado en
+    // el array `events` del doc de sesión. La sesión la maneja TrackingProvider.
+    pushEvent(FbEvent.PageView, { browserOnly: true });
+    pushEvent(FbEvent.ViewContent);
   }, []);
 
   // Completa el registro si volvimos de un signInWithRedirect (fallback
