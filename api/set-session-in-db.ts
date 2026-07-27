@@ -1,7 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { getDb } from "../tracking-suite/utils/db";
+import { getDb } from "../tracking-suite/utils/getDb";
 import { sanitizeCampaign } from "../tracking-suite/utils/sanitizeCampaign";
-import { readRequest } from "../tracking-suite/utils/readRequest";
+import { readVercelMetadata } from "../tracking-suite/utils/readVercelMetadata";
 import { EVENT_KEYS, EventValue } from "../tracking-suite/types";
 
 export const config = {
@@ -56,7 +56,7 @@ export default async function handler(req: any, res: any) {
   // Cada parte se arma por separado y limpia; el doc solo las COMPONE con spreads.
   const campaign = sanitizeCampaign(body.campaign);
   const events = pickEvents(body); // fb + propios → raíz
-  const context = readRequest(req); // ip / geo / ua / cookies → raíz
+  const context = readVercelMetadata(req); // ip / geo / ua / cookies → raíz
 
   const doc = {
     sessionId,

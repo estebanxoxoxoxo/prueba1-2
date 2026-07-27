@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { readRequest } from "../tracking-suite/utils/readRequest";
+import { readVercelMetadata } from "../tracking-suite/utils/readVercelMetadata";
 
 export const config = {
   runtime: "nodejs",
@@ -44,7 +44,7 @@ export default async function sendServerEvent(req: any, res: any) {
       .json({ error: "META_PIXEL_ID / META_ACCESS_TOKEN no están configuradas" });
   }
 
-  const ctx = readRequest(req);
+  const ctx = readVercelMetadata(req);
   const { emailHash, phoneHash } = hashContact(req.body?.contact);
   const externalId = emailHash || phoneHash;
 
