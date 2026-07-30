@@ -64,6 +64,8 @@ export function startRegisterAttempt(source = 'cta') {
   if (typeof window !== 'undefined' && window.sessionStorage) {
     window.sessionStorage.setItem(ATTEMPT_KEY, attemptId);
   }
+  
+  track('subscribe_click', { source, attempt_id: attemptId });
 
   try {
     // Conversión Meta Lead en una línea: pixel del navegador + Conversions API,
@@ -72,7 +74,6 @@ export function startRegisterAttempt(source = 'cta') {
     pushEvent(FbEvent.Lead, { eventId: attemptId });
     // Al pipeline propio (Vector → S3): mismo attemptId → correlación con la
     // conversión Meta y con failedLeads.
-    track('subscribe_click', { source, attempt_id: attemptId });
     if (typeof window !== 'undefined' && typeof window.hj === 'function') {
       window.hj('event', 'lead_click');
     }
