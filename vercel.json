@@ -1,5 +1,8 @@
 {
   "rewrites": [
+    { "source": "/v1/batch", "destination": "http://44.207.109.162:8080/v1/batch" },
+    { "source": "/sourceConfig", "destination": "/sourceConfig.json" },
+    { "source": "/sourceConfig/", "destination": "/sourceConfig.json" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

@@ -14,6 +14,12 @@ export const WHATSAPP_MESSAGE =
 export const whatsappUrl = () =>
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
+// writeKey del pipeline de analytics propio (RudderStack → Vector → S3).
+// Es público por naturaleza (viaja en el navegador); la validación fuerte
+// pasa en el edge (Caddy) cuando haya dominio. Debe coincidir con el de
+// public/sourceConfig.json y el que valide Caddy.
+export const ANALYTICS_WRITE_KEY = 'LTlHrScEJw3Xe47zz4tw3NjWLjS';
+
 // Marca
 export const BRAND = {
   name: 'Smarty',

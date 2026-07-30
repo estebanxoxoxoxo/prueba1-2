@@ -37,14 +37,20 @@ No hay acceso directo a la instancia desde esta máquina. Todo cambio se entrega
 
 Cada script debe ser **idempotente** (guard `grep … && echo YA_EXISTE`), con **backup + `vector validate` + rollback** automático, y **autoverificable**: imprime `VALIDATE_OK` / `SVC_active` / `CURL_200` y manda un evento de prueba con curl. Un cambio cuenta como desplegado solo cuando el output muestra esos marcadores. Para comandos sueltos existe `bash run.sh "…"` en CloudShell.
 
-## Estado al 2026-07-30
+## Estado al 2026-07-30 (noche)
 
-- Core del pipeline: desplegado y verificado.
-- Columnas `group_id`/`previous_id` (`cols.sh`) y logging por etapa (`taps.sh`): scripts entregados el 2026-07-30, ejecución pendiente de confirmar.
-- `rudderstack-suite` (ZIP: README de arquitectura, `sdk/init.js` canónico, copias de referencia de `vector.yaml` y `bronze_v1.schema`, `Caddyfile` template, `schemactl-install.sh`): entregado por chat, **falta descomprimirlo en la raíz de este repo**.
+- Core del pipeline: desplegado y verificado. Columnas `group_id`/`previous_id` y logging por etapa **confirmados**: los eventos de prueba `test-g1` y `test-log1` aparecen en bronze en S3.
+- **Frontend integrado**: SDK `@rudderstack/analytics-js` (v3, npm) en la landing.
+  - `src/analytics.js` — facade con cola propia; carga el SDK en idle (con timeout: las animaciones continuas de la landing pueden postergar `requestIdleCallback` para siempre); `page()` manual al cargar; `track()` usable antes de que cargue el SDK.
+  - writeKey `LTlHrScEJw3Xe47zz4tw3NjWLjS` en `src/config.js` — debe coincidir con `public/sourceConfig.json` y con el que valide Caddy.
+  - Dataplane y `configUrl` **same-origin** (sin CORS ni mixed content): en dev/preview `vite.config.js` sirve `/sourceConfig` y proxya `/v1/batch` al ingestador; en prod lo hacen los rewrites de `vercel.json`. Ojo: el SDK pide `/sourceConfig/` con barra final.
+  - Evento `subscribe_click` en `startRegisterAttempt` (`registerWithGoogle.js`) con `properties: { source, attempt_id }` — el mismo `attemptId` que va a Meta (eventId) y a failedLeads, para correlacionar los tres sistemas.
+- Migración `tracking-suite` → `facebook-api-template` **completada** (venía a medias y el build estaba roto): imports de `main.jsx`/`App.jsx`/`registerWithGoogle.js` apuntados a `facebook-api-template/facebook-push-events/utils`, dos re-export paths corregidos y `setServerEndpoint` agregado. `TrackingProvider` (sistema viejo de sesiones en Firestore) eliminado de `main.jsx`.
+- `rudderstack-suite` (ZIP con README, `init.js`, copias de `vector.yaml`/`bronze_v1.schema`, `Caddyfile`, `schemactl-install.sh`): entregado por chat, falta descomprimirlo en este repo. `src/analytics.js` ya implementa lo que `sdk/init.js` describía.
 
 ## Pendiente
 
-1. **Dominio** con registro A → `44.207.109.162` (bloqueado por el usuario).
-2. Con el dominio: desplegar **Caddy** (TLS automático + preflight CORS + validación de writeKey). El Caddyfile de la suite solo necesita dos reemplazos: dominio y base64 del key.
-3. Con Caddy arriba: `sdk/init.js` pasa de template a producción en la landing (reemplazar writeKey y dominio).
+1. **Abrir tcp/8080 del security group** (paste de CloudShell entregado el 2026-07-30) — interino hasta Caddy, sin validación de writeKey. Con eso los eventos del navegador llegan a raw/bronze.
+2. **Redeploy en Vercel** para activar los rewrites de `/v1/batch` y `/sourceConfig` en prod (verificar que Vercel acepte destino `http://`; si no, esperar a Caddy).
+3. **Dominio** con registro A → `44.207.109.162`, luego **Caddy** (TLS + CORS + validación del writeKey de arriba) y cerrar 8080. Después apuntar el dataplane de `src/analytics.js`/rewrites al dominio si se quiere sacar el hop de Vercel.
+4. `/api/*` no existe en este repo (`api/` está vacío): el registro con Google (`/api/firebase-config`, `/api/register`) y la CAPI de Meta (`/api/send-server-event`) dependen de endpoints que no están acá. Revisar dónde viven realmente.

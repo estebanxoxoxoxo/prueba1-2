@@ -1,4 +1,5 @@
-import { pushEvent, FbEvent } from '../tracking-suite';
+import { pushEvent, FbEvent } from '../facebook-api-template/facebook-push-events/utils';
+import { track } from './analytics';
 
 // Carga diferida: Firebase (SDK + config) solo se baja cuando el usuario
 // muestra intención (hover/tap del botón), no en cada visita.
@@ -66,9 +67,12 @@ export function startRegisterAttempt(source = 'cta') {
 
   try {
     // Conversión Meta Lead en una línea: pixel del navegador + Conversions API,
-    // mismo eventId = attemptId → Meta deduplica. Queda registrado en el doc de
-    // sesión. SIN datos de Google a propósito (captamos a todos los que tocan).
+    // mismo eventId = attemptId → Meta deduplica. SIN datos de Google a
+    // propósito (captamos a todos los que tocan).
     pushEvent(FbEvent.Lead, { eventId: attemptId });
+    // Al pipeline propio (Vector → S3): mismo attemptId → correlación con la
+    // conversión Meta y con failedLeads.
+    track('subscribe_click', { source, attempt_id: attemptId });
     if (typeof window !== 'undefined' && typeof window.hj === 'function') {
       window.hj('event', 'lead_click');
     }

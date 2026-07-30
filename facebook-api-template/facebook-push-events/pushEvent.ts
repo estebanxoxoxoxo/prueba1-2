@@ -12,6 +12,10 @@ import { sendFbBrowserEvent } from "./utils/pixel";
 // en /api/send-server-event.
 let SERVER_ENDPOINT = "/api/send-server-event";
 
+export function setServerEndpoint(path: string): void {
+  SERVER_ENDPOINT = path;
+}
+
 // Hook opcional para que la app se entere de cada evento (agregado de sesión,
 // analytics propio, logs). Sale del core a propósito: así este template no depende
 // de la DB ni del provider de ningún proyecto en particular.

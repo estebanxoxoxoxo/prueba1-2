@@ -24,7 +24,8 @@ import {
   SlidersIcon,
   ChevronIcon,
 } from './components/icons';
-import { pushEvent, FbEvent } from '../tracking-suite';
+import { pushEvent, FbEvent } from '../facebook-api-template/facebook-push-events/utils';
+import { initAnalytics } from './analytics';
 import { completeRedirectSignIn } from './registerWithGoogle';
 import SuccessModal from './components/SuccessModal';
 
@@ -403,9 +404,11 @@ export default function App() {
   useReveal();
 
   useEffect(() => {
+    // Analytics propio (pipeline → Vector → S3): carga el SDK en idle y manda
+    // el page() manual de esta visita.
+    initAnalytics();
     // PageView solo en el navegador (parity con el pixel base). ViewContent en
-    // navegador + Conversions API (mismo eventId → dedup) y queda registrado en
-    // el array `events` del doc de sesión. La sesión la maneja TrackingProvider.
+    // navegador + Conversions API (mismo eventId → dedup).
     pushEvent(FbEvent.PageView, { browserOnly: true });
     pushEvent(FbEvent.ViewContent);
   }, []);
