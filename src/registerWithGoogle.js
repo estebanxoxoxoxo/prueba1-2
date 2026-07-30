@@ -64,8 +64,9 @@ export function startRegisterAttempt(source = 'cta') {
   if (typeof window !== 'undefined' && window.sessionStorage) {
     window.sessionStorage.setItem(ATTEMPT_KEY, attemptId);
   }
-  
+
   track('subscribe_click', { source, attempt_id: attemptId });
+  console.log('[Registro Google] Empezó intento →', attemptId, 'source:', source);
 
   try {
     // Conversión Meta Lead en una línea: pixel del navegador + Conversions API,

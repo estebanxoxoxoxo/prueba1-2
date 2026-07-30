@@ -31,7 +31,6 @@ export default function RegisterButton({ children, className = '', source = 'cta
     // con el motivo si falla.
     startRegisterAttempt(source);
 
-    track('subscribe_click', { source, attempt_id: getAttemptId() });
 
     setStatus('loading');
     try {
