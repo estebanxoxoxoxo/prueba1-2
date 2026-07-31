@@ -142,7 +142,7 @@ const painIcons = [<EyeOffIcon key="eyeoff" />, <AlertIcon key="alert" />, <Batt
 function Problem() {
   const t = useT();
   return (
-    <section className="section problem" id="problema">
+    <section className="section problem" id="problema" data-analytics-id="problema">
       <div className="container">
         <div className="stat-feature reveal">
           <div className="stat-big">
@@ -188,7 +188,7 @@ const walkMeta = [
 function Walkthrough() {
   const t = useT();
   return (
-    <section className="section walk" id="solucion">
+    <section className="section walk" id="solucion" data-analytics-id="solucion">
       <div className="container">
         <div className="section-head reveal">
           <span className="eyebrow"><SparkleIcon /> {t.walk.eyebrow}</span>
