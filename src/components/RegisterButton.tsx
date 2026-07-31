@@ -3,7 +3,7 @@ import { UserCheckIcon, CheckIcon } from './icons';
 import { registerWithGoogle, preloadGoogle, startRegisterAttempt, logFailedLead, REGISTERED_EVENT } from '../registerWithGoogle';
 import { useT } from '../i18n/core';
 import { gateway } from '../../events-suite/gateway';
-import { BusinessEventNames, BusinessEventPayload } from '../../events-suite/types';
+import { BusinessEventNames } from '../../events-suite/types';
 
 // Botón "Registrarse": abre el registro con Google (popup, con fallback a
 // redirect si el navegador bloquea el popup), verifica el token en el
