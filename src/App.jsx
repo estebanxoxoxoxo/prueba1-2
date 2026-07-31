@@ -28,6 +28,7 @@ import { pushEvent, FbEvent } from '../facebook-api-template/facebook-push-event
 import { initAnalytics } from './analytics';
 import { completeRedirectSignIn } from './registerWithGoogle';
 import SuccessModal from './components/SuccessModal';
+import { EventsSuite, IncomingEventReader } from '../events-suite';
 
 const NCES_URL = 'https://nces.ed.gov/programs/coe/indicator/tgk';
 
@@ -435,6 +436,8 @@ export default function App() {
       </main>
       <Footer />
       <SuccessModal />
+      <EventsSuite />
+      <IncomingEventReader />
     </>
   );
 }

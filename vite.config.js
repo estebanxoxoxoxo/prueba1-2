@@ -32,13 +32,25 @@ const analyticsDataplane = () => ({
   configurePreviewServer: serveSourceConfig,
 })
 
+// Los singletons de events-suite (sources, gateway, FSMs) no sobreviven un
+// hot-swap parcial: cualquier cambio dentro de la carpeta recarga la página.
+const eventsSuiteFullReload = () => ({
+  name: 'events-suite-full-reload',
+  handleHotUpdate({ file, server }) {
+    if (file.includes('/events-suite/')) {
+      server.ws.send({ type: 'full-reload' })
+      return []
+    }
+  },
+})
+
 const proxy = {
   '/v1/batch': { target: INGEST, changeOrigin: true },
 }
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), analyticsDataplane()],
+  plugins: [react(), analyticsDataplane(), eventsSuiteFullReload()],
   server: { proxy },
   preview: { proxy },
 })
