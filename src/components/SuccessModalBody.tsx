@@ -6,7 +6,7 @@ import { useT } from '../i18n/core';
 // Contenido animado del modal de éxito. Se carga en un chunk aparte (lazy)
 // desde SuccessModal, así el runtime de `motion` no pesa en la carga inicial
 // de la landing —solo se baja cuando alguien completa el registro.
-export default function SuccessModalBody({ open, data, onClose }) {
+export default function SuccessModalBody({ open, data, onClose }: { open: boolean; data: { email: string | null; name: string | null }; onClose: () => void }) {
   const t = useT();
   const reduced = useReducedMotion();
   const okRef = useRef(null);
@@ -36,7 +36,7 @@ export default function SuccessModalBody({ open, data, onClose }) {
     if (!open) return undefined;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (ev) => {
+    const onKey = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
@@ -48,7 +48,7 @@ export default function SuccessModalBody({ open, data, onClose }) {
 
   // Foco al botón principal al abrir (accesibilidad).
   useEffect(() => {
-    if (open) okRef.current?.focus();
+    if (open) (okRef.current as HTMLButtonElement | null)?.focus();
   }, [open]);
 
   const first = data.name ? data.name.trim().split(/\s+/)[0] : '';

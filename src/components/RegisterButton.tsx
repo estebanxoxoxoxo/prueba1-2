@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { UserCheckIcon, CheckIcon } from './icons';
 import { registerWithGoogle, preloadGoogle, startRegisterAttempt, logFailedLead, REGISTERED_EVENT } from '../registerWithGoogle';
 import { useT } from '../i18n/core';
+import { gateway } from '../../events-suite/gateway';
+import { BusinessEventNames, BusinessEventPayload } from '../../events-suite/types';
 
 // Botón "Registrarse": abre el registro con Google (popup, con fallback a
 // redirect si el navegador bloquea el popup), verifica el token en el
 // servidor y guarda el usuario real en Firestore.
-export default function RegisterButton({ children, className = '', source = 'cta' }) {
+export default function RegisterButton({ children, className = '', source = 'cta' }: { children?: string; className?: string; source?: string }) {
   const t = useT();
   const [status, setStatus] = useState('idle'); // idle | loading | done
 
@@ -25,6 +27,8 @@ export default function RegisterButton({ children, className = '', source = 'cta
 
   const onClick = async () => {
     if (status !== 'idle') return;
+
+    gateway.emit(BusinessEventNames.RegisterButtonClick);
 
     // "Empezó" el registro → failedLeads con reason "started" (keepalive, así
     // se captura aunque cierre la pestaña). Se borra si completa; se actualiza

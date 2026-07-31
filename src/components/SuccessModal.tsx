@@ -13,7 +13,7 @@ export default function SuccessModal() {
   const [data, setData] = useState({ email: null, name: null });
 
   useEffect(() => {
-    const onReg = (e) => {
+    const onReg = (e: any) => {
       setData({ email: e.detail?.email || null, name: e.detail?.name || null });
       setTriggered(true);
       setOpen(true);
