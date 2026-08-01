@@ -26,10 +26,39 @@ const serveSourceConfig = (server) => {
   })
 }
 
+// Mock de /api/session-metadata para dev/preview: en prod es una función de
+// Vercel que devuelve los headers x-vercel-ip-* (geo/IP) del edge.
+const DEV_SESSION_METADATA = {
+  ip: '127.0.0.1',
+  country: 'DEV',
+  region: 'DEV',
+  city: 'localhost',
+  timezone: 'America/Argentina/Buenos_Aires',
+  deployment: { env: 'development' },
+}
+
+const serveSessionMetadata = (server) => {
+  server.middlewares.use((req, res, next) => {
+    const path = (req.url || '').split('?')[0]
+    if (path === '/api/session-metadata') {
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify(DEV_SESSION_METADATA))
+      return
+    }
+    next()
+  })
+}
+
 const analyticsDataplane = () => ({
   name: 'smarty-analytics-dataplane',
-  configureServer: serveSourceConfig,
-  configurePreviewServer: serveSourceConfig,
+  configureServer: (server) => {
+    serveSourceConfig(server)
+    serveSessionMetadata(server)
+  },
+  configurePreviewServer: (server) => {
+    serveSourceConfig(server)
+    serveSessionMetadata(server)
+  },
 })
 
 // Los singletons de events-suite (sources, gateway, FSMs) no sobreviven un

@@ -1,5 +1,4 @@
 import { pushEvent, FbEvent } from '../facebook-api-template/facebook-push-events/utils';
-import { track } from './analytics';
 
 // Carga diferida: Firebase (SDK + config) solo se baja cuando el usuario
 // muestra intención (hover/tap del botón), no en cada visita.
@@ -65,7 +64,8 @@ export function startRegisterAttempt(source = 'cta') {
     window.sessionStorage.setItem(ATTEMPT_KEY, attemptId);
   }
 
-  track('subscribe_click', { source, attempt_id: attemptId });
+  // El subscribe_click lo emite RegisterButton (vía useEventsSuite) con este
+  // mismo attemptId: este módulo queda libre de tracking de la suite.
   console.log('[Registro Google] Empezó intento →', attemptId, 'source:', source);
 
   try {

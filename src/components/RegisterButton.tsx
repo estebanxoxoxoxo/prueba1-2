@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { UserCheckIcon, CheckIcon } from './icons';
 import { registerWithGoogle, preloadGoogle, startRegisterAttempt, logFailedLead, REGISTERED_EVENT } from '../registerWithGoogle';
 import { useT } from '../i18n/core';
-import { gateway } from '../../events-suite/gateway';
-import { BusinessEventNames } from '../../events-suite/types';
+import { useEventsSuite, BusinessEventNames } from '../eventsSuiteMirror';
 
 // Botón "Registrarse": abre el registro con Google (popup, con fallback a
 // redirect si el navegador bloquea el popup), verifica el token en el
 // servidor y guarda el usuario real en Firestore.
 export default function RegisterButton({ children, className = '', source = 'cta' }: { children?: string; className?: string; source?: string }) {
   const t = useT();
+  const suite = useEventsSuite();
   const [status, setStatus] = useState('idle'); // idle | loading | done
 
   // El registro puede completarse recién al volver de signInWithRedirect,
@@ -28,12 +28,18 @@ export default function RegisterButton({ children, className = '', source = 'cta
   const onClick = async () => {
     if (status !== 'idle') return;
 
-    gateway.emit(BusinessEventNames.RegisterButtonClick);
+    suite.pushBusinessEvent(BusinessEventNames.RegisterButtonClick);
 
     // "Empezó" el registro → failedLeads con reason "started" (keepalive, así
     // se captura aunque cierre la pestaña). Se borra si completa; se actualiza
     // con el motivo si falla.
-    startRegisterAttempt(source);
+    const attemptId = startRegisterAttempt(source);
+    // subscribe_click con el MISMO attemptId que la conversión Meta Lead y
+    // failedLeads → correlación de los tres sistemas. El adapter de rudder lo
+    // aplana a { source, attempt_id }, el shape de siempre en bronze.
+    suite.pushBusinessEvent(BusinessEventNames.SubscribeClick, {
+      metadata: { source, attempt_id: attemptId },
+    });
 
 
     setStatus('loading');

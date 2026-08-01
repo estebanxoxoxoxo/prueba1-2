@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BRAND } from './config';
+import { ANALYTICS_WRITE_KEY, BRAND } from './config';
 import { useT } from './i18n/core';
 import { LangSwitch } from './i18n/index.jsx';
 import Mascot from './components/Mascot';
@@ -25,10 +25,9 @@ import {
   ChevronIcon,
 } from './components/icons';
 import { pushEvent, FbEvent } from '../facebook-api-template/facebook-push-events/utils';
-import { initAnalytics } from './analytics';
 import { completeRedirectSignIn } from './registerWithGoogle';
 import SuccessModal from './components/SuccessModal';
-import { EventsSuite, IncomingEventReader } from '../events-suite';
+import { useEventsSuite } from './eventsSuiteMirror.js';
 
 const NCES_URL = 'https://nces.ed.gov/programs/coe/indicator/tgk';
 
@@ -403,16 +402,21 @@ function Footer() {
 /* ============================================================ APP */
 export default function App() {
   useReveal();
+  const suite = useEventsSuite();
 
   useEffect(() => {
-    // Analytics propio (pipeline → Vector → S3): carga el SDK en idle y manda
-    // el page() manual de esta visita.
-    initAnalytics();
+    // Delivery de la suite (su única red): RudderStack (pipeline → Vector →
+    // S3), conversiones de Meta y geo/IP de sesión de Vercel.
+    suite.startDelivery({
+      rudderStackWriteKey: ANALYTICS_WRITE_KEY,
+      fb: true,
+      vercelMetadataCollect: true,
+    });
     // PageView solo en el navegador (parity con el pixel base). ViewContent en
     // navegador + Conversions API (mismo eventId → dedup).
     pushEvent(FbEvent.PageView, { browserOnly: true });
     pushEvent(FbEvent.ViewContent);
-  }, []);
+  }, [suite]);
 
   // Completa el registro si volvimos de un signInWithRedirect (fallback
   // cuando el navegador bloqueó el popup de Google).
@@ -436,8 +440,6 @@ export default function App() {
       </main>
       <Footer />
       <SuccessModal />
-      <EventsSuite />
-      <IncomingEventReader />
     </>
   );
 }

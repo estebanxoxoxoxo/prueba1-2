@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import AdPlacas from './components/AdPlacas.jsx'
 import { LanguageProvider } from './i18n/index.jsx'
+import { EventsSuiteProvider } from './eventsSuiteMirror.js'
 
 // Placas animadas para Facebook Ads:
 //   /placas · /placas/916 · /ads → 9:16
@@ -20,7 +21,11 @@ createRoot(document.getElementById('root')).render(
       {placasAspect ? (
         <AdPlacas aspect={placasAspect} />
       ) : (
-        <App />
+        // LA conexión con events-suite: importarla ya enciende la detección;
+        // el Provider habilita el uso (hook) y el reader de debug.
+        <EventsSuiteProvider reader>
+          <App />
+        </EventsSuiteProvider>
       )}
     </LanguageProvider>
   </StrictMode>,
