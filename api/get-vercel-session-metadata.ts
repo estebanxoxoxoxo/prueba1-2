@@ -1,13 +1,14 @@
-// Echo de la metadata de sesión que Vercel adjunta al request en el edge:
+// Echo de la metadata de sesión que el hosting adjunta al request en el edge:
 // geo/IP viajan como headers x-vercel-ip-* que el navegador no puede ver por
-// sí mismo — este endpoint se los devuelve. Sin dependencias, sin estado.
+// sí mismo — este endpoint se los devuelve, identificando al proveedor en
+// `supplier`. Sin dependencias, sin estado, sin data de deployment.
 
-const header = (req, name) => {
+const header = (req: { headers: Record<string, string | string[]> }, name: string) => {
   const value = req.headers[name];
   return Array.isArray(value) ? value[0] : value || undefined;
 };
 
-const decoded = (value) => {
+const decoded = (value: string | undefined) => {
   if (!value) return undefined;
   try {
     return decodeURIComponent(value); // Vercel manda p. ej. la ciudad URL-encoded
@@ -16,10 +17,11 @@ const decoded = (value) => {
   }
 };
 
-export default function handler(req, res) {
+export default function handler(req: { headers: Record<string, string | string[]> }, res: { setHeader: (key: string, value: string) => void; status: (code: number) => { json: (data: any) => void } }) {
   const forwarded = header(req, 'x-forwarded-for');
   res.setHeader('Cache-Control', 'no-store');
   res.status(200).json({
+    supplier: 'vercel',
     ip: header(req, 'x-real-ip') || (forwarded ? forwarded.split(',')[0].trim() : undefined),
     country: header(req, 'x-vercel-ip-country'),
     region: decoded(header(req, 'x-vercel-ip-country-region')),
@@ -28,11 +30,5 @@ export default function handler(req, res) {
     latitude: header(req, 'x-vercel-ip-latitude'),
     longitude: header(req, 'x-vercel-ip-longitude'),
     timezone: header(req, 'x-vercel-ip-timezone'),
-    deployment: {
-      env: process.env.VERCEL_ENV,
-      url: process.env.VERCEL_URL,
-      commit: process.env.VERCEL_GIT_COMMIT_SHA,
-      branch: process.env.VERCEL_GIT_COMMIT_REF,
-    },
   });
 }

@@ -24,10 +24,9 @@ import {
   SlidersIcon,
   ChevronIcon,
 } from './components/icons';
-import { pushEvent, FbEvent } from '../facebook-api-template/facebook-push-events/utils';
 import { completeRedirectSignIn } from './registerWithGoogle';
 import SuccessModal from './components/SuccessModal';
-import { useEventsSuite } from './eventsSuiteMirror.js';
+import { useEventsSuite, pushEvent, FbEvent } from './eventsSuiteMirror.js';
 
 const NCES_URL = 'https://nces.ed.gov/programs/coe/indicator/tgk';
 

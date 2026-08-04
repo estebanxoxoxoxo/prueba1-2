@@ -26,23 +26,29 @@ const serveSourceConfig = (server) => {
   })
 }
 
-// Mock de /api/session-metadata para dev/preview: en prod es una función de
+// Mock de /api/get-vercel-session-metadata para dev/preview: en prod es una función de
 // Vercel que devuelve los headers x-vercel-ip-* (geo/IP) del edge.
 const DEV_SESSION_METADATA = {
+  supplier: 'vercel',
   ip: '127.0.0.1',
   country: 'DEV',
   region: 'DEV',
   city: 'localhost',
   timezone: 'America/Argentina/Buenos_Aires',
-  deployment: { env: 'development' },
 }
 
 const serveSessionMetadata = (server) => {
   server.middlewares.use((req, res, next) => {
     const path = (req.url || '').split('?')[0]
-    if (path === '/api/session-metadata') {
+    if (path === '/api/get-vercel-session-metadata') {
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify(DEV_SESSION_METADATA))
+      return
+    }
+    // Mock de la CAPI para dev: en prod es api/send-server-event.ts (Meta Graph).
+    if (path === '/api/send-server-event') {
+      res.setHeader('Content-Type', 'application/json')
+      res.end(JSON.stringify({ success: true, dev: true }))
       return
     }
     next()

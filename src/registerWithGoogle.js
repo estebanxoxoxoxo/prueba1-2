@@ -1,4 +1,4 @@
-import { pushEvent, FbEvent } from '../facebook-api-template/facebook-push-events/utils';
+import { pushEvent, FbEvent } from './eventsSuiteMirror';
 
 // Carga diferida: Firebase (SDK + config) solo se baja cuando el usuario
 // muestra intención (hover/tap del botón), no en cada visita.
