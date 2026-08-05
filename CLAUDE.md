@@ -10,9 +10,16 @@ Este repo es la landing de **Smarty** (React + Vite — ver `README.md` para el 
 
 Flush a S3 cada 10 minutos o al apagar Vector.
 
+Al lado de esas dos capas vive `schemas/<v>/bronze_v1.schema`: el esquema
+publicado en el propio lake, versionado por carpeta (`1`, `2`, …), para poder
+leer el Parquet sin depender de la instancia. Lo publica
+`infra/cloudshell/publish-schema.sh` (deduce bucket y altura de `vector.yaml`).
+
 **Reglas no negociables del SDK** (el porqué está en el README de la suite):
 - Batch obligatorio: `queueOptions.batch.enabled: true`.
-- Sin beacon, sin autoTrack; `page()` se llama manualmente.
+- Sin beacon y sin `page()` automático — `page()` se llama manualmente. Ojo: eso
+  NO aplica a `sessions.autoTrack`, que va **activo** (30 min de inactividad) y
+  es quien pone `context.sessionId` en cada evento.
 - writeKey validado por header (base64) en el edge.
 
 **Capa plata (diseñada, no construida):** traits en `context.traits`, dedup por `message_id`, particionado por fecha.
