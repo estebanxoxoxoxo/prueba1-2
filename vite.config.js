@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react'
 // same-origin — sirve /sourceConfig (el mismo JSON estático que Vercel sirve
 // en prod) y proxya /v1/batch al ingestador (Vector en EC2). En prod el
 // equivalente son los rewrites de vercel.json.
-const INGEST = 'http://44.207.109.162:8080'
+const INGEST = 'https://actasitalianasexpress.com'
 
 const sourceConfig = readFileSync(
   fileURLToPath(new URL('./public/sourceConfig.json', import.meta.url)),
