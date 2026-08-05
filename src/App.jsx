@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ANALYTICS_WRITE_KEY, BRAND } from './config';
+import { ACTIVE_SESSIONS_DB, ANALYTICS_WRITE_KEY, BRAND } from './config';
 import { useT } from './i18n/core';
 import { LangSwitch } from './i18n/index.jsx';
 import Mascot from './components/Mascot';
@@ -410,6 +410,7 @@ export default function App() {
       rudderStackWriteKey: ANALYTICS_WRITE_KEY,
       fb: true,
       vercelMetadataCollect: true,
+      activeSessions: ACTIVE_SESSIONS_DB,
     });
     // PageView solo en el navegador (parity con el pixel base). ViewContent en
     // navegador + Conversions API (mismo eventId → dedup).

@@ -20,6 +20,12 @@ export const whatsappUrl = () =>
 // public/sourceConfig.json y el que valide Caddy.
 export const ANALYTICS_WRITE_KEY = 'LTlHrScEJw3Xe47zz4tw3NjWLjS';
 
+// Realtime Database donde la suite publica la presencia en vivo (un nodo por
+// pestaña abierta bajo /activeSessions, que otra app lee para el panel de
+// "visitantes ahora"). La URL es pública, igual que el writeKey. Vacío = el
+// pusher no arranca.
+export const ACTIVE_SESSIONS_DB = 'https://data-analyzer-1c0fe-default-rtdb.firebaseio.com';
+
 // Marca
 export const BRAND = {
   name: 'Smarty',

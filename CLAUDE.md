@@ -22,7 +22,7 @@ leer el Parquet sin depender de la instancia. Lo publica
   es quien pone `context.sessionId` en cada evento.
 - writeKey validado por header (base64) en el edge.
 
-**Capa plata (diseñada, no construida):** traits en `context.traits`, dedup por `message_id`, particionado por fecha.
+**Capa plata (diseñada, no construida):** traits en `context.traits`, dedup por `event_id` (el de la suite, en `properties` — no el `message_id` de la raíz, que lo genera el SDK al despachar), particionado por fecha.
 
 **Observabilidad:** taps de consola por etapa en el journal de Vector — una línea JSON `{"stage":"INGEST",...}` por request recibido, una `{"stage":"TRANSFORM",...}` por evento individual (un batch de N = 1 INGEST + N TRANSFORM), y el debug de `aws_smithy_runtime` loguea cada PutObject a S3. Ver en vivo: `journalctl -u vector -f`. Es logging por evento: con volumen alto se apaga quitando el sink `console_taps` y borrando `logging.conf`.
 
