@@ -24,7 +24,9 @@ export const ANALYTICS_WRITE_KEY = 'LTlHrScEJw3Xe47zz4tw3NjWLjS';
 // pestaña abierta bajo /activeSessions, que otra app lee para el panel de
 // "visitantes ahora"). La URL es pública, igual que el writeKey. Vacío = el
 // pusher no arranca.
-export const ACTIVE_SESSIONS_DB = 'https://data-analyzer-1c0fe-default-rtdb.firebaseio.com';
+// 2026-08-12: apunta a la plataforma nueva (proyecto sessions-ingest); la
+// vieja (data-analyzer-1c0fe) queda para retirar con el resto de AWS.
+export const ACTIVE_SESSIONS_DB = 'https://sessions-ingest-default-rtdb.firebaseio.com';
 
 // Marca
 export const BRAND = {

@@ -21,6 +21,8 @@ export default function handler(_req: any, res: any) {
   // Sin caché: la config es mínima y así evitamos servir valores viejos
   // mientras se corrige/valida (un cache largo nos hizo servir una key rota).
   res.setHeader("Cache-Control", "no-store");
+
+
   return res.status(200).json({
     apiKey: clean(process.env.apiKey),
     authDomain: clean(process.env.authDomain),
