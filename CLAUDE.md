@@ -40,7 +40,7 @@ git clone --recurse-submodules <repo>          # o, si ya está clonado:
 git submodule update --init --recursive
 ```
 
-Hoy el submódulo apunta al **path local** `C:/Users/esteb/Desktop/events-suite`. Cuando exista el repo en GitHub: `git submodule set-url events-suite <url>` y commitear el `.gitmodules`.
+El submódulo apunta a **`https://github.com/estebanxoxoxoxo/events-suite.git`** (rama `main`). Verificado el 2026-08-14 con un clon limpio desde GitHub: trae la suite sola.
 
 Si se toca la suite: commit en su repo → `git add events-suite` acá (eso mueve el puntero) → commit.
 
