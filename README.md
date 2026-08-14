@@ -9,11 +9,15 @@ Hecha con **React + Vite**.
 ## 🚀 Desarrollo
 
 ```bash
-npm install      # instala dependencias
-npm run dev      # servidor de desarrollo (http://localhost:5173)
-npm run build    # build de producción en /dist
-npm run preview  # previsualiza el build
+git submodule update --init --recursive   # trae events-suite (la analítica)
+pnpm install     # instala dependencias
+pnpm dev         # servidor de desarrollo (http://localhost:5173)
+pnpm build       # build de producción en /dist
+pnpm preview     # previsualiza el build
 ```
+
+Al clonar de cero: `git clone --recurse-submodules <repo>` y te ahorrás el
+primer comando.
 
 ## ⚙️ Configuración (lo que tienes que cambiar)
 
@@ -46,17 +50,28 @@ Los clics de WhatsApp ya se envían a Hotjar como eventos
 ## 📁 Estructura
 
 ```
-index.html                 # meta tags, fuente Nunito, snippet de Hotjar
+index.html                 # meta tags, fuente Nunito, pixel de Meta, snippet de Hotjar
 public/owl.svg             # favicon (búho Smarty)
+events-suite/              # SUBMÓDULO: la analítica, repo aparte
 src/
-  config.js                # WhatsApp + marca (edítalo aquí)
+  config.js                # WhatsApp + marca + writeKey de analytics (edítalo aquí)
   index.css                # sistema de diseño y estilos
   App.jsx                  # composición de la Home
+  eventsSuiteMirror.tsx    # el único archivo que importa de events-suite
   components/
     Owl.jsx                # mascota búho (SVG)
     icons.jsx              # iconos SVG
-    WhatsAppButton.jsx     # botón y botón flotante de WhatsApp
+    RegisterButton.tsx     # registro con Google
 ```
+
+## 📈 Analítica
+
+Vive en el submódulo [`events-suite/`](./events-suite) — repo propio, con su
+README. Acá solo está **el espejo** (`src/eventsSuiteMirror.tsx`) y su uso: el
+Provider en `main.jsx`, el `startDelivery` en `App.jsx` y los eventos de
+negocio en los componentes. El cableado que la suite necesita del host es una
+línea en `vite.config.js`; el resto está documentado en
+`events-suite/host/README.md`.
 
 ## 🎨 Secciones
 

@@ -1,63 +1,55 @@
 # Contexto del proyecto
 
-Este repo es la landing de **Smarty** (React + Vite — ver `README.md` para el desarrollo de la landing) y además el hogar previsto de `rudderstack-suite/`: el pipeline de analytics propio, compatible con el protocolo RudderStack. Este archivo documenta ese segundo frente, que no vive en ningún otro lado del repo.
+Este repo es **la landing de Smarty** y nada más: React + Vite (ver `README.md`). La analítica no vive acá — vive en **`events-suite`**, un repo aparte que entra como **submódulo de git** en `events-suite/`.
 
-## Pipeline de analytics
+## El split (2026-08-14)
 
-**Flujo:** SDK JS (rudder-analytics) → `POST /v1/batch` → Vector en EC2 → S3 en dos capas:
-- **raw** — el JSON crudo de cada request, tal como llegó.
-- **bronze** — Parquet con envelope de 17 columnas (esquema `bronze_v1`), un registro por evento ya spliteado del batch. Incluye `group_id` y `previous_id`.
+La suite salió de este repo al suyo (`C:\Users\esteb\Desktop\events-suite`, con la historia del `subtree split`). Se llevó:
 
-Flush a S3 cada 10 minutos o al apagar Vector.
-
-Al lado de esas dos capas vive `schemas/<v>/bronze_v1.schema`: el esquema
-publicado en el propio lake, versionado por carpeta (`1`, `2`, …), para poder
-leer el Parquet sin depender de la instancia. Lo publica
-`infra/cloudshell/publish-schema.sh` (deduce bucket y altura de `vector.yaml`).
-
-**Reglas no negociables del SDK** (el porqué está en el README de la suite):
-- Batch obligatorio: `queueOptions.batch.enabled: true`.
-- Sin beacon y sin `page()` automático — `page()` se llama manualmente. Ojo: eso
-  NO aplica a `sessions.autoTrack`, que va **activo** (30 min de inactividad) y
-  es quien pone `context.sessionId` en cada evento.
-- writeKey validado por header (base64) en el edge.
-
-**Capa plata (diseñada, no construida):** traits en `context.traits`, dedup por `event_id` (el de la suite, en `properties` — no el `message_id` de la raíz, que lo genera el SDK al despachar), particionado por fecha.
-
-**Observabilidad:** taps de consola por etapa en el journal de Vector — una línea JSON `{"stage":"INGEST",...}` por request recibido, una `{"stage":"TRANSFORM",...}` por evento individual (un batch de N = 1 INGEST + N TRANSFORM), y el debug de `aws_smithy_runtime` loguea cada PutObject a S3. Ver en vivo: `journalctl -u vector -f`. Es logging por evento: con volumen alto se apaga quitando el sink `console_taps` y borrando `logging.conf`.
-
-## Infra
-
-| Qué | Dónde |
+| Se fue | Dónde vive ahora |
 |---|---|
-| EC2 | `i-0c3181f7280153931` · `us-east-1` · IP pública `44.207.109.162` |
-| Vector | servicio systemd; config `/etc/vector/vector.yaml`, esquema `/etc/vector/bronze_v1.schema` |
-| Ingest | `http://127.0.0.1:8080/v1/batch` (aún no público) |
-| Log level | drop-in `/etc/systemd/system/vector.service.d/logging.conf` (`VECTOR_LOG=info,aws_smithy_runtime=debug`) |
+| `events-suite/` | la raíz del repo de la suite (por eso el espejo sigue importando de `../events-suite`) |
+| `api/` (las 5 funciones) | `events-suite/api/` |
+| `infra/` (Vector, EC2, CloudShell) | `events-suite/infra/` |
+| `public/sourceConfig.json` + el dataplane del `vite.config.js` | `events-suite/host/` |
+| script `publish:event-types` | `package.json` de la suite |
 
-## Mecanismo de deploy al servidor
+**Consecuencia viva, a resolver**: `/api/register`, `/api/failed-lead` y `/api/firebase-config` son del registro con Google de ESTA landing y se fueron con `api/` por decisión explícita. Hasta que se re-expongan desde la raíz (un re-export de una línea por función, receta en `events-suite/host/README.md`), en producción el botón de registro va a dar 404. En dev nunca existieron.
 
-No hay acceso directo a la instancia desde esta máquina. Todo cambio se entrega como **dos bloques bash para pegar en AWS CloudShell**:
+Lo mismo, en menor escala, para la suite: sin `/api/send-server-event` la CAPI de Meta no cuenta (queda el pixel solo) y sin `/api/get-vercel-session-metadata` los eventos viajan sin geo/IP de sesión. Degradan sin romper la página.
 
-1. Un heredoc `cat > X.sh << 'OUTER' … OUTER` con el script completo.
-2. El despacho: `aws ssm send-command` (AWS-RunShellScript) + `aws ssm get-command-invocation` para traer el output.
+## La conexión con la suite — el espejo, y solo el espejo
 
-Cada script debe ser **idempotente** (guard `grep … && echo YA_EXISTE`), con **backup + `vector validate` + rollback** automático, y **autoverificable**: imprime `VALIDATE_OK` / `SVC_active` / `CURL_200` y manda un evento de prueba con curl. Un cambio cuenta como desplegado solo cuando el output muestra esos marcadores. Para comandos sueltos existe `bash run.sh "…"` en CloudShell.
+`src/eventsSuiteMirror.tsx` es **el único archivo de la landing que importa de `events-suite`**. Todo lo demás importa del espejo. Es verificable con un grep y es la regla que hace que mover, renombrar o versionar la suite no toque más de un archivo acá.
 
-## Estado al 2026-07-30 (noche)
+Lo que la landing implementa del contrato:
 
-- Core del pipeline: desplegado y verificado. Columnas `group_id`/`previous_id` y logging por etapa **confirmados**: los eventos de prueba `test-g1` y `test-log1` aparecen en bronze en S3.
-- **Frontend integrado**: SDK `@rudderstack/analytics-js` (v3, npm) en la landing.
-  - `src/analytics.js` **ya no existe** (2026-07-31): su lógica vive en `events-suite/3-delivery/pushers/rudderstack.ts` (SDK en idle con timeout, cola pre-SDK, `page()` manual, batch, sin beacon). La suite completa es sources → FSMs → gateway → adapters (puros) → pushers, con `metadata/` (vercel/login/fb) para enriquecer al despachar. LA única conexión app↔suite es el espejo `src/eventsSuite.tsx` (ÚNICO archivo de la app que importa de `events-suite`; el resto importa del espejo) → `<EventsSuiteProvider reader>` (en `main.jsx`, solo rama App — no placas) + `useEventsSuite()` → `{ pushBusinessEvent, startDelivery }`; importar la suite ya auto-inicia la detección (cero red), y `App.jsx` llama `suite.startDelivery({ rudderStackWriteKey: ANALYTICS_WRITE_KEY, fb: true, vercelMetadataCollect: true })` (mapping de Meta conservador: Lead excluido a propósito — ya lo dispara `startRegisterAttempt` con `eventId = attemptId`). `pushers/fb/` es copia de `facebook-push-events`; `subscribe_click` lo emite `RegisterButton` (no `registerWithGoogle`, que quedó sin tracking) con el mismo `attempt_id`, y el adapter lo aplana al shape de siempre.
-  - writeKey `LTlHrScEJw3Xe47zz4tw3NjWLjS` en `src/config.js` — debe coincidir con `public/sourceConfig.json` y con el que valide Caddy.
-  - Dataplane y `configUrl` **same-origin** (sin CORS ni mixed content): en dev/preview `vite.config.js` sirve `/sourceConfig` y proxya `/v1/batch` al ingestador; en prod lo hacen los rewrites de `vercel.json`. Ojo: el SDK pide `/sourceConfig/` con barra final.
-  - Evento `subscribe_click` en `startRegisterAttempt` (`registerWithGoogle.js`) con `properties: { source, attempt_id }` — el mismo `attemptId` que va a Meta (eventId) y a failedLeads, para correlacionar los tres sistemas.
-- `facebook-api-template/` **retirado del repo** (2026-08-03): su copia vive en `events-suite/3-delivery/pushers/fb/` y la suite es el único motor Meta. Las conversiones directas (PageView/ViewContent en `App.jsx`, Lead en `registerWithGoogle.js`) usan `pushEvent`/`FbEvent` importados del espejo `src/eventsSuiteMirror.tsx`. `TrackingProvider` (sistema viejo de sesiones en Firestore) sigue eliminado de `main.jsx`.
-- `rudderstack-suite` (ZIP con README, `init.js`, copias de `vector.yaml`/`bronze_v1.schema`, `Caddyfile`, `schemactl-install.sh`): entregado por chat, falta descomprimirlo en este repo. `src/analytics.js` ya implementa lo que `sdk/init.js` describía.
+- `main.jsx` — `<EventsSuiteProvider reader>` envuelve `<App />`, **solo esa rama**: las rutas `/placas` de ads quedan afuera a propósito.
+- `App.jsx` — `suite.startDelivery({ rudderStackWriteKey, fb: true, vercelMetadataCollect: true, activeSessions })` una sola vez, con la config de `src/config.js`. Ahí también salen las conversiones directas de Meta: `pushEvent(FbEvent.PageView)` y `ViewContent`.
+- `RegisterButton.tsx` — `pushBusinessEvent(RegisterButtonClick)` y `pushBusinessEvent(SubscribeClick, { metadata: { source, attempt_id } })`.
+- `registerWithGoogle.js` — `pushEvent(FbEvent.Lead, { eventId: attemptId })`. El `attemptId` es el mismo id en Meta, en `failedLeads` y en bronze: correlaciona los tres sistemas.
+- Markup — `data-analytics-id` en las secciones a medir (habilita `component_focus`).
+- `vite.config.js` — una línea: `eventsSuiteVite({ writeKey, sourceName, workspace })`, el plugin que la propia suite trae en `host/vite.js`. Cero código de la suite acá.
 
-## Pendiente
+**Qué NO hacer**: importar de `events-suite` fuera del espejo · emitir eventos de comportamiento desde la landing (son de las FSMs) · editar la suite desde acá sin commitear en su repo (es un submódulo: los cambios se commitean allá y acá se actualiza el puntero).
 
-1. **Abrir tcp/8080 del security group** (paste de CloudShell entregado el 2026-07-30) — interino hasta Caddy, sin validación de writeKey. Con eso los eventos del navegador llegan a raw/bronze.
-2. **Redeploy en Vercel** para activar los rewrites de `/v1/batch` y `/sourceConfig` en prod (verificar que Vercel acepte destino `http://`; si no, esperar a Caddy).
-3. **Dominio** con registro A → `44.207.109.162`, luego **Caddy** (TLS + CORS + validación del writeKey de arriba) y cerrar 8080. Después apuntar el dataplane de `src/analytics.js`/rewrites al dominio si se quiere sacar el hop de Vercel.
-4. `api/` ya tiene dos funciones: `send-server-event.ts` (CAPI de Meta — el pusher de fb ya corre `browserOnly: false`: pixel + CAPI con el mismo eventID; requiere `META_PIXEL_ID` y `META_ACCESS_TOKEN` en las env de Vercel, sin ellas la CAPI da 500 y solo cuenta el pixel) y `get-vercel-session-metadata.ts` (geo/IP de sesión). Siguen sin vivir acá `/api/firebase-config` y `/api/register` (registro con Google) — revisar dónde viven realmente.
+## Trabajar con el submódulo
+
+```bash
+git clone --recurse-submodules <repo>          # o, si ya está clonado:
+git submodule update --init --recursive
+```
+
+Hoy el submódulo apunta al **path local** `C:/Users/esteb/Desktop/events-suite`. Cuando exista el repo en GitHub: `git submodule set-url events-suite <url>` y commitear el `.gitmodules`.
+
+Si se toca la suite: commit en su repo → `git add events-suite` acá (eso mueve el puntero) → commit.
+
+## Configuración de la landing
+
+`src/config.js` — WhatsApp, marca, y las dos constantes públicas que la landing le pasa a la suite: `ANALYTICS_WRITE_KEY` (tiene que coincidir con el sourceConfig que emite el plugin y con el que valide Caddy) y `ACTIVE_SESSIONS_DB` (RTDB de presencia en vivo, hoy el proyecto `sessions-ingest`).
+
+`index.html` — snippet del pixel de Meta (`fbq`) y de Hotjar. El pixel es requisito de la suite: ella lo usa, no lo instala.
+
+`vercel.json` — el rewrite del SPA + los dos del dataplane (`/v1/batch` y `/sourceConfig`), copiados de `events-suite/host/vercel.json`.
+
+`TrackingProvider` (sistema viejo de sesiones en Firestore) sigue eliminado de `main.jsx`.
