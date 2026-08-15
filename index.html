@@ -11,11 +11,8 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1738615870502045');    
+      fbq('init', '1738615870502045');
       </script>
-      <noscript><img height="1" width="1" style="display:none"
-      src="https://www.facebook.com/tr?id=1738615870502045&ev=PageView&noscript=1"
-      /></noscript>
     <!-- End Meta Pixel Code -->
      
     
@@ -71,6 +68,17 @@
     <!-- =============== Fin Hotjar Tracking Code =============== -->
   </head>
   <body>
+    <!-- Meta Pixel (fallback sin JS). Va en el BODY: dentro de <head> solo se
+         admiten link, style y meta, y un <img> ahí rompe cualquier parser
+         estricto (parse5: disallowed-content-in-noscript-in-head). -->
+    <noscript
+      ><img
+        height="1"
+        width="1"
+        style="display: none"
+        src="https://www.facebook.com/tr?id=1738615870502045&ev=PageView&noscript=1"
+        alt=""
+    /></noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
