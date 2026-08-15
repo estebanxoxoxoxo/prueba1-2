@@ -26,7 +26,7 @@ import {
 } from './components/icons';
 import { completeRedirectSignIn } from './registerWithGoogle';
 import SuccessModal from './components/SuccessModal';
-import { useEventsSuite, pushEvent, FbEvent } from './eventsSuiteMirror.js';
+import { useEventsSuite } from './eventsSuiteMirror.js';
 
 const NCES_URL = 'https://nces.ed.gov/programs/coe/indicator/tgk';
 
@@ -412,10 +412,7 @@ export default function App() {
       vercelMetadataCollect: true,
       activeSessions: ACTIVE_SESSIONS_DB,
     });
-    // PageView solo en el navegador (parity con el pixel base). ViewContent en
-    // navegador + Conversions API (mismo eventId → dedup).
-    pushEvent(FbEvent.PageView, { browserOnly: true });
-    pushEvent(FbEvent.ViewContent);
+    // La carga la detecta la suite (FSMs/pageView.ts): la app no emite nada.
   }, [suite]);
 
   // Completa el registro si volvimos de un signInWithRedirect (fallback
