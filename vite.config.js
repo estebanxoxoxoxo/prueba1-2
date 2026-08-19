@@ -1,3 +1,5 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
 import { eventsSuiteVite } from './events-suite/host/vite.js'
 import { ANALYTICS_WRITE_KEY } from './src/config.js'
