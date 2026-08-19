@@ -26,7 +26,7 @@ export const ANALYTICS_WRITE_KEY = 'LTlHrScEJw3Xe47zz4tw3NjWLjS';
 // pusher no arranca.
 // 2026-08-12: apunta a la plataforma nueva (proyecto sessions-ingest); la
 // vieja (data-analyzer-1c0fe) queda para retirar con el resto de AWS.
-export const ACTIVE_SESSIONS_DB = 'https://prueba-pasos-default-rtdb.firebaseio.com';
+export const ACTIVE_SESSIONS_DB = 'https://session-ingest-default-rtdb.firebaseio.com';
 
 // Marca
 export const BRAND = {
